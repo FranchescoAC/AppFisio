@@ -1,0 +1,76 @@
+/* ListadoAtenciones.css */
+
+.listado-atenciones {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 25px;
+  background: #f4f7fa;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.listado-atenciones h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 25px;
+}
+
+.listado-atenciones label {
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.listado-atenciones select {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 25px;
+  font-size: 16px;
+  min-width: 200px;
+}
+
+.listado-atenciones table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  table-layout: auto; /* permite que columnas se ajusten al contenido */
+}
+
+.listado-atenciones th,
+.listado-atenciones td {
+  padding: 14px 12px; /* más espacio horizontal */
+  border: 1px solid #ddd;
+  text-align: left;
+  vertical-align: top;
+}
+
+.listado-atenciones th {
+  background-color: #0077cc;
+  color: white;
+  font-weight: 600;
+  text-align: left;
+}
+
+.listado-atenciones tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.listado-atenciones tr:hover {
+  background-color: #e6f2ff;
+}
+
+/* Signos vitales en lista vertical con negrita y separación */
+.listado-atenciones td div {
+  margin-bottom: 6px; /* separación vertical */
+}
+
+.listado-atenciones td div strong {
+  font-weight: 700; /* negrita para nombre de propiedad */
+}
+
+.listado-atenciones p {
+  text-align: center;
+  color: #555;
+  font-style: italic;
+}
