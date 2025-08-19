@@ -3,15 +3,15 @@ from typing import Optional
 from datetime import date
 
 class Paciente(BaseModel):
-    paciente_id: str  # Ej: P 461
-    fecha_registro: str  # o date si quieres manejar como fecha
+    paciente_id: Optional[str] = None  # Ahora opcional
+    fecha_registro: str
     nombres_completos: str
-    estado_civil: str  # casado, soltero, divorciado, viudo
+    estado_civil: str
     domicilio: str
     email: EmailStr
-    ci: str  # cédula de identidad
+    ci: str
     edad: int
-    sexo: str  # Masculino / Femenino
-    origen: str  # país de origen
+    sexo: str
+    origen: str
     telefono: str
     motivo_consulta: Optional[str] = None

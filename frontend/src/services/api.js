@@ -3,7 +3,7 @@ export const API_URL2 = "http://127.0.0.1:8002";
 
 export async function registrarPaciente(data) {
   try {
-    const response = await fetch("http://127.0.0.1:8001/pacientes/register", {
+    const response = await fetch(`${API_URL}/pacientes/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -11,12 +11,13 @@ export async function registrarPaciente(data) {
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
-    return await response.json();
+    return await response.json(); // <-- Aquí puede fallar si el backend devuelve algo inesperado
   } catch (error) {
     console.error("Error en registrarPaciente:", error);
     throw error;
   }
 }
+
 
 export async function listarPacientes() {
   try {
@@ -56,3 +57,41 @@ export async function listarAtenciones(paciente_id) {
   }
 }
 
+// Buscar pacientes por nombre o id
+export async function buscarPacientes(query) {
+  try {
+    const response = await fetch(`${API_URL}/pacientes/buscar?query=${encodeURIComponent(query)}`);
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Error en buscarPacientes:", error);
+    throw error;
+  }
+}
+
+// Buscar atenciones por paciente_id
+// Buscar atenciones por paciente_id o fecha
+export async function buscarAtenciones({ paciente_id, fecha }) {
+  try {
+    const params = new URLSearchParams();
+    if (paciente_id) params.append("paciente_id", paciente_id);
+    if (fecha) params.append("fecha", fecha);
+
+    const response = await fetch(`${API_URL2}/atenciones/buscar?${params.toString()}`);
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Error en buscarAtenciones:", error);
+    throw error;
+  }
+}
+export async function obtenerSiguientePacienteId() {
+  try {
+    const response = await fetch(`${API_URL}/pacientes/next_id`);
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Error en obtenerSiguientePacienteId:", error);
+    throw error;
+  }
+}

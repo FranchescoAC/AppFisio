@@ -43,9 +43,9 @@ def listar_atenciones_por_paciente(paciente_id: str):
 def registrar_atencion(atencion: Atencion):
     atencion_dict = atencion.dict()
 
-    # Generar atención_id automático (ejemplo: A1001, A1002, ...)
+    # Generar atención_id automático
     total = atenciones_collection.count_documents({})
-    atencion_dict["atencion_id"] = f"A{1000 + total + 1}"
+    atencion_dict["atencion_id"] = f"A{1 + total + 1}"
 
     result = atenciones_collection.insert_one(atencion_dict)
     return {
@@ -53,3 +53,19 @@ def registrar_atencion(atencion: Atencion):
         "atencion_id": atencion_dict["atencion_id"],
         "id": str(result.inserted_id)
     }
+
+# Buscar atenciones por paciente_id o por fecha
+@app.get("/atenciones/buscar")
+def buscar_atenciones(paciente_id: str = None, fecha: str = None):
+    query = {}
+    if paciente_id:
+        query["paciente_id"] = paciente_id
+    if fecha:
+        query["fecha"] = fecha  
+
+    atenciones = []
+    for a in atenciones_collection.find(query):
+        a["_id"] = str(a["_id"])
+        atenciones.append(a)
+
+    return atenciones

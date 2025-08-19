@@ -38,20 +38,20 @@ function ListadoPacientes() {
           </tr>
         </thead>
         <tbody>
-          {pacientes.map((p) => (
-            <tr key={p._id}>
-              <td>{p.paciente_id}</td>
-              <td>{p.fecha_registro}</td>
-              <td>{p.nombres_completos}</td>
-              <td>{p.estado_civil}</td>
-              <td>{p.domicilio}</td>
-              <td>{p.email}</td>
-              <td>{p.ci}</td>
-              <td>{p.edad}</td>
-              <td>{p.sexo}</td>
-              <td>{p.origen}</td>
-              <td>{p.telefono}</td>
-              <td>{p.motivo_consulta}</td>
+          {Array.isArray(pacientes) && pacientes.map((p) => (
+            <tr key={p._id || p.paciente_id || Math.random()}>
+              <td>{p.paciente_id ?? ""}</td>
+              <td>{p.fecha_registro ?? ""}</td>
+              <td>{p.nombres_completos ?? ""}</td>
+              <td>{p.estado_civil ?? ""}</td>
+              <td>{p.domicilio ?? ""}</td>
+              <td>{p.email ?? ""}</td>
+              <td>{p.ci ?? ""}</td>
+              <td>{p.edad ?? ""}</td>
+              <td>{p.sexo ?? ""}</td>
+              <td>{p.origen ?? ""}</td>
+              <td>{p.telefono ?? ""}</td>
+              <td>{p.motivo_consulta ?? ""}</td>
             </tr>
           ))}
         </tbody>
