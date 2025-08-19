@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { listarPacientes, registrarAtencion } from "../services/api";
-import "../RegistroAtencion.css"; // Asegúrate de tener este CSS
+import "../RegistroAtencion.css";
 
 const antecedentesOpciones = [
   "DIABETES", "HEPATOPATÍA", "ASMA", "ENF. ENDOCRINAS",
@@ -21,17 +21,18 @@ function RegistroAtencion() {
     signos_vitales: {
       tension_arterial: "",
       temperatura: "",
-      frecuencia_cardiaca: 0,
-      frecuencia_respiratoria: 0,
-      peso: 0,
-      talla: 0,
+      frecuencia_cardiaca:  "",
+      frecuencia_respiratoria:  "",
+      peso:  "",
+      talla:  "",
     },
     diagnostico: "",
     tratamiento: "",
     notas: "",
   });
+  const [nextAtencionId, setNextAtencionId] = useState("");
 
-  // Cargar pacientes para el select
+  // Cargar pacientes
   useEffect(() => {
     const fetchPacientes = async () => {
       try {
@@ -69,11 +70,13 @@ function RegistroAtencion() {
     }
     try {
       const data = await registrarAtencion(form);
+      setNextAtencionId(data.atencion_id); // Guardamos el atencion_id asignado
       alert(`Atención registrada: ${data.atencion_id}`);
-      // Reset form si quieres
-      setForm({ ...form, fecha: "", quien_atiende: "", motivo_consulta: "", antecedentes: [], signos_vitales: { tension_arterial: "", temperatura: "", frecuencia_cardiaca: 0, frecuencia_respiratoria: 0, peso: 0, talla: 0 }, diagnostico: "", tratamiento: "", notas: "" });
+      // Reset form
+      setForm({ ...form, fecha: "", quien_atiende: "", motivo_consulta: "", antecedentes: [], signos_vitales: { tension_arterial: "", temperatura: "", frecuencia_cardiaca:  "", frecuencia_respiratoria:  "", peso:  "", talla:  "" }, diagnostico: "", tratamiento: "", notas: "" });
     } catch (error) {
       alert("Error al registrar atención");
+      console.error(error);
     }
   };
 
@@ -81,6 +84,7 @@ function RegistroAtencion() {
     <form className="form-container" onSubmit={handleSubmit}>
       <div className="card">
         <h3>Información General</h3>
+        <p>Próximo ID de Atención: <strong>{nextAtencionId || "A..."}</strong></p>
         <select
           name="paciente_id"
           value={form.paciente_id}

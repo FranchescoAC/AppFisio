@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 class SignosVitales(BaseModel):
     tension_arterial: str
@@ -10,12 +10,13 @@ class SignosVitales(BaseModel):
     talla: float
 
 class Atencion(BaseModel):
-    paciente_id: str  # ejemplo: "P1001"
-    fecha: str        # "18/08/2025"
+    atencion_id: Optional[str] = None  # <-- ahora es opcional
+    paciente_id: str
+    fecha: str
     quien_atiende: str
-    motivo_consulta: str
-    antecedentes: List[str]
-    signos_vitales: SignosVitales
-    diagnostico: str = ""
-    tratamiento: str = ""
-    notas: str = ""
+    motivo_consulta: Optional[str] = None
+    antecedentes: Optional[list] = []
+    signos_vitales: Optional[dict] = {}
+    diagnostico: Optional[str] = None
+    tratamiento: Optional[str] = None
+    notas: Optional[str] = None
