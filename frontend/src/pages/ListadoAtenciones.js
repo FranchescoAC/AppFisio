@@ -87,7 +87,9 @@ function ListadoAtenciones() {
         <table>
           <thead>
             <tr>
-              <th>Paciente</th> {/* <-- Nueva columna */}
+              <th>Atención</th> 
+              <th>Paciente</th>
+              <th>Paciente</th> 
               <th>Fecha</th>
               <th>Fisioterapeuta</th>
               <th>Motivo Consulta</th>
@@ -99,6 +101,8 @@ function ListadoAtenciones() {
           <tbody>
             {atenciones.map((a) => (
               <tr key={a._id}>
+                <td>{a.atencion_id || "-"}</td> {/* ✅ Mostrar ID de la atención */}
+                <td>{a.paciente_id}</td>        {/* ✅ Mostrar ID del paciente */}
                 <td>{pacientesMap[a.paciente_id] || a.paciente_id}</td> {/* <-- Mostrar nombre */}
                 <td>{a.fecha}</td>
                 <td>{a.quien_atiende}</td>
