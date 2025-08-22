@@ -1,5 +1,6 @@
 export const API_URL = "http://127.0.0.1:8001";
 export const API_URL2 = "http://127.0.0.1:8002";
+export const API_URL3 = "http://127.0.0.1:8003";
 
 export async function registrarPaciente(data) {
   try {
@@ -89,6 +90,66 @@ export async function obtenerSiguientePacienteId() {
     return await response.json();
   } catch (error) {
     console.error("Error en obtenerSiguientePacienteId:", error);
+    throw error;
+  }
+}
+
+//INVENTARIO
+
+// ✅ Obtener inventario completo
+export async function getInventario() {
+  try {
+    const response = await fetch(`${API_URL3}/inventario/`);
+    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+    return await response.json(); // Devuelve un array
+  } catch (error) {
+    console.error("Error en getInventario:", error);
+    return [];
+  }
+}
+
+// ✅ Agregar un item
+export async function addItem(item) {
+  try {
+    const response = await fetch(`${API_URL3}/inventario/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(item),
+    });
+    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Error en addItem:", error);
+    throw error;
+  }
+}
+
+// ✅ Eliminar un item
+export async function deleteItem(item_id) {
+  try {
+    const response = await fetch(`${API_URL3}/inventario/${item_id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Error en deleteItem:", error);
+    throw error;
+  }
+}
+
+// ✅ Actualizar item
+export async function updateItem(item_id, item) {
+  try {
+    const response = await fetch(`${API_URL3}/inventario/${item_id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(item),
+    });
+    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Error en updateItem:", error);
     throw error;
   }
 }
