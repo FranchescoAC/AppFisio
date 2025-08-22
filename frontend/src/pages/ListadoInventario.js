@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { getInventario, updateItem, deleteItem } from "../services/api"; // deleteItem agregado
+import { getInventario, updateItem, deleteItem } from "../services/api";
+
+const isAdmin = true; // temporal
 
 function ListadoInventario() {
   const [inventario, setInventario] = useState([]);
 
   useEffect(() => {
-    const cargarInventario = async () => {
-      try {
-        const data = await getInventario();
-        setInventario(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Error cargando inventario:", error);
-        setInventario([]);
-      }
-    };
     cargarInventario();
   }, []);
+
+  const cargarInventario = async () => {
+    try {
+      const data = await getInventario();
+      setInventario(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error cargando inventario:", error);
+    }
+  };
 
   const cambiarCantidad = async (item, delta) => {
     try {
@@ -24,9 +26,8 @@ function ListadoInventario() {
 
       const actualizado = { ...item, cantidad: nuevaCantidad };
       await updateItem(item.item_id, actualizado);
-
-      setInventario((prev) =>
-        prev.map((i) => (i.item_id === item.item_id ? actualizado : i))
+      setInventario(prev =>
+        prev.map(i => (i.item_id === item.item_id ? actualizado : i))
       );
     } catch (error) {
       console.error("Error actualizando cantidad:", error);
@@ -36,7 +37,7 @@ function ListadoInventario() {
   const eliminarItem = async (item_id) => {
     try {
       await deleteItem(item_id);
-      setInventario((prev) => prev.filter((i) => i.item_id !== item_id));
+      setInventario(prev => prev.filter(i => i.item_id !== item_id));
     } catch (error) {
       console.error("Error eliminando item:", error);
     }
@@ -64,8 +65,8 @@ function ListadoInventario() {
                 marginBottom: 10,
                 borderRadius: 10,
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between"
+                justifyContent: "space-between",
+                alignItems: "center"
               }}
             >
               <div>

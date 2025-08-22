@@ -5,6 +5,7 @@ import RegistroAtencion from "./pages/RegistroAtencion";
 import ListadoAtenciones from "./pages/ListadoAtenciones";
 import RegistroInventario from "./pages/RegistroInventario";
 import ListadoInventario from "./pages/ListadoInventario";
+import AnalisisInventario from "./pages/AnalisisInventario";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Link to="/listado-atenciones">Listado Atenciones</Link>
         <Link to="/registro-inventario">Registrar Inventario</Link>
         <Link to="/listado-inventario">Listado Inventario</Link>
+        <Link to="/analisis-inventario">Análisis Inventario</Link>
       </nav>
 
       <Routes>
@@ -25,6 +27,7 @@ function App() {
         <Route path="/listado-atenciones" element={<ListadoAtenciones />} />
         <Route path="/registro-inventario" element={<RegistroInventario />} />
         <Route path="/listado-inventario" element={<ListadoInventario />} />
+        <Route path="/analisis-inventario" element={<AnalisisInventario />} />
       </Routes>
     </Router>
   );
