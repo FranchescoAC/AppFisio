@@ -2,6 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from inventario.database import inventario_collection
 from inventario.models import Inventario, InventarioInput
+from pydantic import BaseModel
+
+class CambioCantidad(BaseModel):
+    cantidad: int
 
 app = FastAPI()
 
@@ -36,17 +40,14 @@ def obtener_inventario():
 # -------------------
 # ✅ Actualizar item (cantidad o cualquier campo)
 # -------------------
-@app.put("/inventario/{item_id}", response_model=Inventario)
-def actualizar_item(item_id: str, data: InventarioInput):
-    result = inventario_collection.update_one(
-        {"item_id": item_id},
-        {"$set": data.dict(exclude_unset=True)}
-    )
-    if result.matched_count == 0:
+@app.put("/inventario/{item_id}")
+def actualizar_item(item_id: str, data: dict):
+    item = inventario_collection.find_one({"item_id": item_id})
+    if not item:
         raise HTTPException(status_code=404, detail="Item no encontrado")
-    
-    item_actualizado = inventario_collection.find_one({"item_id": item_id}, {"_id": 0})
-    return item_actualizado
+    nueva_cantidad = item["cantidad"] + data.get("cantidad", 0)
+    inventario_collection.update_one({"item_id": item_id}, {"$set": {"cantidad": nueva_cantidad}})
+    return {"cantidad": nueva_cantidad}
 
 # -------------------
 # ✅ Eliminar item

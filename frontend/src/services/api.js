@@ -1,6 +1,8 @@
 export const API_URL = "http://127.0.0.1:8001";
 export const API_URL2 = "http://127.0.0.1:8002";
 export const API_URL3 = "http://127.0.0.1:8003";
+export const API_URL4 = "http://127.0.0.1:8004";
+
 
 export async function registrarPaciente(data) {
   try {
@@ -150,6 +152,55 @@ export async function updateItem(item_id, item) {
     return await response.json();
   } catch (error) {
     console.error("Error en updateItem:", error);
+    throw error;
+  }
+}
+
+//VENTAS
+export const registrarVenta = async (venta) => {
+  const response = await fetch(`${API_URL4}/ventas/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(venta),
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al registrar la venta");
+  }
+
+  const data = await response.json();
+
+  // ✅ Después de registrar venta, disminuimos el stock
+  await disminuirStock(venta.item_id, venta.cantidad);
+
+  return data;
+};
+
+
+export const getVentas = async () => {
+  const response = await fetch(`${API_URL4}/ventas/`);
+
+  if (!response.ok) {
+    throw new Error("Error al obtener las ventas");
+  }
+
+  return await response.json();
+};
+
+// ✅ Disminuir stock de un item
+export async function disminuirStock(item_id, cantidad) {
+  try {
+    const response = await fetch(`${API_URL3}/inventario/${item_id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cantidad: -cantidad }), // Resta en backend
+    });
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error en disminuirStock:", error);
     throw error;
   }
 }
