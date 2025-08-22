@@ -69,15 +69,11 @@ export async function buscarPacientes(query) {
   }
 }
 
-// Buscar atenciones por paciente_id
-// Buscar atenciones por paciente_id o fecha
-export async function buscarAtenciones({ paciente_id, fecha }) {
-  try {
-    const params = new URLSearchParams();
-    if (paciente_id) params.append("paciente_id", paciente_id);
-    if (fecha) params.append("fecha", fecha);
 
-    const response = await fetch(`${API_URL2}/atenciones/buscar?${params.toString()}`);
+// Buscar atenciones por nombre o paciente_id
+export async function buscarAtenciones({ query }) {
+  try {
+    const response = await fetch(`${API_URL2}/atenciones/buscar?query=${encodeURIComponent(query)}`);
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
     return await response.json();
   } catch (error) {
@@ -85,6 +81,7 @@ export async function buscarAtenciones({ paciente_id, fecha }) {
     throw error;
   }
 }
+
 export async function obtenerSiguientePacienteId() {
   try {
     const response = await fetch(`${API_URL}/pacientes/next_id`);

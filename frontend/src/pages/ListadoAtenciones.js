@@ -29,16 +29,16 @@ function ListadoAtenciones() {
     fetchPacientes();
   }, []);
 
-  // búsqueda de atenciones por paciente_id
-  const handleSearch = async () => {
-    if (!search.trim()) return;
-    try {
-      const data = await buscarAtenciones({ paciente_id: search });
-      setAtenciones(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Error en la búsqueda de atenciones:", error);
-    }
-  };
+// búsqueda de atenciones por nombre o paciente_id
+const handleSearch = async () => {
+  if (!search.trim()) return;
+  try {
+    const data = await buscarAtenciones({ query: search });  // 👈 cambio aquí
+    setAtenciones(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error("Error en la búsqueda de atenciones:", error);
+  }
+};
 
   useEffect(() => {
     if (!pacienteId) return;
