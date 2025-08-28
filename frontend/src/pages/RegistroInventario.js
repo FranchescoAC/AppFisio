@@ -29,6 +29,7 @@ const RegistroInventario = () => {
       setInventario(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error cargando inventario:", error);
+      toast.error("No se pudo cargar el inventario");
     }
   };
 
@@ -67,96 +68,70 @@ const RegistroInventario = () => {
     }
   };
 
-  const actualizarStock = async (item, delta) => {
-    // Evitar que el stock quede negativo
+  const cambiarCantidad = async (item, delta) => {
     const nuevaCantidad = item.cantidad + delta;
     if (nuevaCantidad < 0) {
       toast.error("❌ No puedes reducir más stock del disponible");
       return;
     }
 
+    const actualizado = { ...item, cantidad: nuevaCantidad };
     try {
-      const response = await fetch(`http://localhost:8003/inventario/${item.item_id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cantidad: delta })
-      });
-      if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-      const data = await response.json();
+      await updateItem(item.item_id, actualizado);
       setInventario(prev =>
-        prev.map(i => i.item_id === item.item_id ? { ...i, cantidad: data.cantidad } : i)
+        prev.map(i => (i.item_id === item.item_id ? actualizado : i))
       );
     } catch (error) {
-      console.error("Error actualizando cantidad:", error);
+      console.error("Error actualizando stock:", error);
+      toast.error("No se pudo actualizar el stock");
     }
   };
 
-  const eliminarItemConConfirm = async (item_id, nombre) => {
-    const confirmar = window.confirm(`¿Seguro que quieres eliminar "${nombre}"?`);
+  const eliminarItem = async (item_id) => {
+    const confirmar = window.confirm("¿Seguro que quieres eliminar este producto?");
     if (!confirmar) return;
 
-    await deleteItem(item_id);
-    setInventario(prev => prev.filter(i => i.item_id !== item_id));
-    toast.success("🗑️ Producto eliminado", { position: "top-right" });
+    try {
+      await deleteItem(item_id);
+      setInventario(prev => prev.filter(i => i.item_id !== item_id));
+      toast.success("🗑️ Producto eliminado", { position: "top-right" });
+    } catch (error) {
+      console.error("Error eliminando item:", error);
+      toast.error("No se pudo eliminar el producto");
+    }
   };
 
   const venderItem = async (item) => {
     const cantidad = cantidadesVenta[item.item_id] || 1;
 
-    if (cantidad <= 0) {
-      toast.error("❌ Ingresa una cantidad válida");
-      return;
-    }
-
     if (item.cantidad < cantidad) {
-      toast.error("❌ No hay stock suficiente");
+      toast.error("❌ No hay stock suficiente", { position: "top-right" });
       return;
     }
 
-const venderItem = async (item) => {
-  const cantidad = cantidadesVenta[item.item_id] || 1;
+    try {
+      // Registrar venta en microservicio ventas
+      await registrarVenta({
+        item_id: item.item_id,
+        cantidad,
+        precio_unitario: item.precio_venta,
+      });
 
-  if (cantidad <= 0) {
-    toast.error("❌ Ingresa una cantidad válida");
-    return;
-  }
+      // Disminuir stock en inventario
+      await cambiarCantidad(item, -cantidad);
 
-  if (item.cantidad < cantidad) {
-    toast.error("❌ No hay stock suficiente");
-    return;
-  }
+      // Reset cantidad después de vender
+      setCantidadesVenta(prev => ({ ...prev, [item.item_id]: 1 }));
 
-  try {
-    // Registrar venta
-    await registrarVenta({
-      item_id: item.item_id,
-      cantidad,
-      precio_unitario: item.precio_venta
-    });
-
-    // Actualizar stock RESTANDO la cantidad vendida
-    const response = await fetch(`http://localhost:8003/inventario/${item.item_id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cantidad: -cantidad }) // <- solo aquí
-    });
-    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-    const data = await response.json();
-
-    setInventario(prev =>
-      prev.map(i => i.item_id === item.item_id ? { ...i, cantidad: data.cantidad } : i)
-    );
-
-    // Reset input de venta
-    setCantidadesVenta(prev => ({ ...prev, [item.item_id]: 1 }));
-
-    toast.success(`✅ Vendido ${cantidad} ${item.unidad} de ${item.nombre}`);
-  } catch (error) {
-    console.error("Error registrando venta:", error);
-    toast.error("No se pudo realizar la venta");
-  }
-};
-
+      // Toast de venta
+      toast.success(`✅ Vendido ${cantidad} ${item.unidad} de ${item.nombre}`, {
+        position: "top-right",
+      });
+    } catch (error) {
+      console.error("Error registrando venta:", error);
+      toast.error("No se pudo realizar la venta");
+    }
+  };
 
   const getColor = (cantidad) => {
     if (cantidad < 3) return "rgba(255,0,0,0.3)";
@@ -165,8 +140,8 @@ const venderItem = async (item) => {
   };
 
   return (
-    <div style={{ padding: 20, color: "white", fontFamily: "Arial", background: "#121212" }}>
-      <h2>📦 Inventario</h2>
+    <div style={{ padding: 20, background: "#121212", color: "white", fontFamily: "Arial" }}>
+      <h2 style={{ textAlign: "center" }}>📦 Inventario</h2>
 
       {/* Botón toggle registro */}
       <button
@@ -185,64 +160,48 @@ const venderItem = async (item) => {
           <input type="number" placeholder="Precio Compra" value={nuevoItem.precio_compra} onChange={e => setNuevoItem({ ...nuevoItem, precio_compra: Number(e.target.value) })} />
           <input type="number" placeholder="Precio Venta" value={nuevoItem.precio_venta} onChange={e => setNuevoItem({ ...nuevoItem, precio_venta: Number(e.target.value) })} />
           <input placeholder="URL Imagen" value={nuevoItem.imagen_url} onChange={e => setNuevoItem({ ...nuevoItem, imagen_url: e.target.value })} />
-          <button onClick={handleAdd}>➕ Agregar</button>
+          <button onClick={handleAdd} style={{ padding: "10px", borderRadius: 8, background: "#1e88e5", color: "white", fontSize: "1rem", cursor: "pointer" }}>➕ Agregar</button>
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
         {inventario.map(item => (
           <div key={item.item_id} style={{
-            padding: 15,
-            borderRadius: 10,
             background: getColor(item.cantidad),
+            padding: 15,
+            borderRadius: 15,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            textAlign: "center"
+            textAlign: "center",
           }}>
             <h3>{item.nombre}</h3>
             {item.imagen_url && <img src={item.imagen_url} alt={item.nombre} style={{ width: "120px", height: "120px", objectFit: "cover", borderRadius: 10, marginBottom: 5 }} />}
-            <p>💲{item.precio_venta?.toFixed(2)}</p>
+            <p style={{ fontWeight: "bold", fontSize: "1.2rem" }}>💲{item.precio_venta?.toFixed(2)}</p>
             <p>Stock: {item.cantidad} {item.unidad}</p>
             <p style={{ fontSize: "0.9rem", opacity: 0.8 }}>{item.descripcion || "-"}</p>
 
-            {/* Input y botón para vender */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+            {/* Controles de venta */}
+            <div style={{ display: "flex", alignItems: "center", marginTop: 10, gap: 10 }}>
               <input
                 type="number"
                 min="1"
                 max={item.cantidad}
                 value={cantidadesVenta[item.item_id] || 1}
-                onChange={e =>
-                  setCantidadesVenta(prev => ({
-                    ...prev,
-                    [item.item_id]: Math.max(1, Math.min(item.cantidad, parseInt(e.target.value) || 1))
-                  }))
-                }
-                style={{ width: "60px", padding: "5px", borderRadius: 5, border: "1px solid #ccc", textAlign: "center" }}
+                onChange={e => setCantidadesVenta(prev => ({ ...prev, [item.item_id]: parseInt(e.target.value) || 1 }))}
+                style={{ width: "70px", fontSize: "1.2rem", padding: "5px", borderRadius: 8, border: "1px solid #ccc", textAlign: "center" }}
               />
-              <button onClick={() => venderItem(item)} style={{ padding: "10px 20px", fontSize: "1rem", background: "#28a745", color: "white", border: "none", borderRadius: 10, cursor: "pointer" }}>💸 Vender</button>
+              <button onClick={() => venderItem(item)} style={{ padding: "10px 20px", fontSize: "1.2rem", background: "#28a745", color: "white", border: "none", borderRadius: 10, cursor: "pointer" }}>💸 Vender</button>
             </div>
 
-            {/* Input y botones para ajustar stock */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
-              <input
-                type="number"
-                min="1"
-                value={cantidadesStock[item.item_id] || 1}
-                onChange={e =>
-                  setCantidadesStock(prev => ({
-                    ...prev,
-                    [item.item_id]: Math.max(1, parseInt(e.target.value) || 1)
-                  }))
-                }
-                style={{ width: "60px", padding: "5px", borderRadius: 5, border: "1px solid #ccc", textAlign: "center" }}
-              />
-              <button onClick={() => actualizarStock(item, cantidadesStock[item.item_id] || 1)} style={{ padding: "10px 15px", fontSize: "1rem", borderRadius: 8, cursor: "pointer" }}>➕</button>
-              <button onClick={() => actualizarStock(item, -(cantidadesStock[item.item_id] || 1))} style={{ padding: "10px 15px", fontSize: "1rem", borderRadius: 8, cursor: "pointer" }}>➖</button>
+            {/* Botones de sumar/restar stock */}
+            <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+              <button onClick={() => cambiarCantidad(item, 1)} style={{ padding: "10px 15px", fontSize: "1rem", borderRadius: 8, cursor: "pointer" }}>➕</button>
+              <button onClick={() => cambiarCantidad(item, -1)} style={{ padding: "10px 15px", fontSize: "1rem", borderRadius: 8, cursor: "pointer" }}>➖</button>
             </div>
 
-            <button onClick={() => eliminarItemConConfirm(item.item_id, item.nombre)} style={{ marginTop: 10, padding: "10px 20px", fontSize: "1rem", background: "#dc3545", color: "white", border: "none", borderRadius: 10, cursor: "pointer" }}>🗑️ Eliminar</button>
+            {/* Botón eliminar */}
+            <button onClick={() => eliminarItem(item.item_id)} style={{ marginTop: 10, padding: "10px 20px", fontSize: "1.2rem", background: "#dc3545", color: "white", border: "none", borderRadius: 10, cursor: "pointer" }}>🗑️ Eliminar</button>
           </div>
         ))}
       </div>

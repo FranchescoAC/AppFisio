@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getInventario } from "../services/api";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ListadoInventario = () => {
   const [inventario, setInventario] = useState([]);
@@ -14,6 +16,7 @@ const ListadoInventario = () => {
       setInventario(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error cargando inventario:", error);
+      toast.error("No se pudo cargar el inventario", { position: "top-right" });
     }
   };
 
@@ -24,9 +27,9 @@ const ListadoInventario = () => {
   };
 
   return (
-    <div style={{ padding: 20, background: "#121212", color: "white" }}>
-      <h2 style={{ textAlign: "center" }}>📦 Inventario (Solo Visualización)</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+    <div style={{ padding: 20, background: "#121212", color: "white", fontFamily: "Arial" }}>
+      <h2 style={{ textAlign: "center" }}>📦 Inventario Disponible</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 20 }}>
         {inventario.map(item => (
           <div
             key={item.item_id}
@@ -46,26 +49,21 @@ const ListadoInventario = () => {
                 src={item.imagen_url}
                 alt={item.nombre}
                 style={{
-                  width: "120px",
-                  height: "120px",
+                  width: "150px",
+                  height: "150px",
                   objectFit: "cover",
                   borderRadius: 10,
-                  marginBottom: 5,
+                  marginBottom: 10,
                 }}
               />
             )}
-            <p style={{ fontWeight: "bold", fontSize: "1.2rem" }}>
-              💲{item.precio_venta?.toFixed(2)}
-            </p>
-            <p>
-              Stock: {item.cantidad} {item.unidad}
-            </p>
-            <p style={{ fontSize: "0.9rem", opacity: 0.8 }}>
-              {item.descripcion || "-"}
-            </p>
+            <p style={{ fontWeight: "bold", fontSize: "1.2rem" }}>💲{item.precio_venta?.toFixed(2)}</p>
+            <p>Stock: {item.cantidad} {item.unidad}</p>
           </div>
         ))}
       </div>
+
+      <ToastContainer />
     </div>
   );
 };
