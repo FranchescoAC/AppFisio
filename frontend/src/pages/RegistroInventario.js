@@ -100,38 +100,36 @@ const RegistroInventario = () => {
       toast.error("No se pudo eliminar el producto");
     }
   };
+const venderItem = async (item) => {
+  const cantidad = cantidadesVenta[item.item_id] || 1;
 
-  const venderItem = async (item) => {
-    const cantidad = cantidadesVenta[item.item_id] || 1;
+  if (item.cantidad < cantidad) {
+    toast.error("❌ No hay stock suficiente", { position: "top-right" });
+    return;
+  }
 
-    if (item.cantidad < cantidad) {
-      toast.error("❌ No hay stock suficiente", { position: "top-right" });
-      return;
-    }
+  try {
+    // Registrar venta y descontar stock (api.js ya lo hace todo)
+    await registrarVenta({
+      item_id: item.item_id,
+      cantidad,
+      precio_unitario: item.precio_venta,
+    });
 
-    try {
-      // Registrar venta en microservicio ventas
-      await registrarVenta({
-        item_id: item.item_id,
-        cantidad,
-        precio_unitario: item.precio_venta,
-      });
+    // 🔄 Recargar inventario actualizado desde backend
+    await cargarInventario();
 
-      // Disminuir stock en inventario
-      await cambiarCantidad(item, -cantidad);
+    // Reset cantidad después de vender
+    setCantidadesVenta(prev => ({ ...prev, [item.item_id]: 1 }));
 
-      // Reset cantidad después de vender
-      setCantidadesVenta(prev => ({ ...prev, [item.item_id]: 1 }));
-
-      // Toast de venta
-      toast.success(`✅ Vendido ${cantidad} ${item.unidad} de ${item.nombre}`, {
-        position: "top-right",
-      });
-    } catch (error) {
-      console.error("Error registrando venta:", error);
-      toast.error("No se pudo realizar la venta");
-    }
-  };
+    toast.success(`✅ Vendido ${cantidad} ${item.unidad} de ${item.nombre}`, {
+      position: "top-right",
+    });
+  } catch (error) {
+    console.error("Error registrando venta:", error);
+    toast.error("No se pudo realizar la venta");
+  }
+};
 
   const getColor = (cantidad) => {
     if (cantidad < 3) return "rgba(255,0,0,0.3)";

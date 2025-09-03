@@ -204,3 +204,14 @@ export async function disminuirStock(item_id, cantidad) {
     throw error;
   }
 }
+
+// ✅ Actualizar una atención
+export async function updateAtencion(atencion_id, data) {
+  const response = await fetch(`${API_URL2}/atenciones/${atencion_id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+  return await response.json();
+}

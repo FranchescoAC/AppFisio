@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { listarAtenciones, listarPacientes, buscarAtenciones } from "../services/api";
+import {
+  listarAtenciones,
+  listarPacientes,
+  buscarAtenciones,
+  updateAtencion,
+} from "../services/api";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function ListadoAtenciones() {
   const [pacientes, setPacientes] = useState([]);
@@ -7,7 +14,13 @@ function ListadoAtenciones() {
   const [atenciones, setAtenciones] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [pacientesMap, setPacientesMap] = useState({}); // <--- Diccionario para nombres
+  const [pacientesMap, setPacientesMap] = useState({});
+  const [editando, setEditando] = useState(null); // atención en edición
+  const [formEdicion, setFormEdicion] = useState({
+    fase_intermedia: "",
+    fase_final: "",
+    notas: "",
+  });
 
   // Traer todos los pacientes
   useEffect(() => {
@@ -16,29 +29,31 @@ function ListadoAtenciones() {
         const data = await listarPacientes();
         setPacientes(data);
 
-        // Construir diccionario paciente_id -> nombres_completos
         const map = {};
         data.forEach((p) => {
           map[p.paciente_id] = p.nombres_completos;
         });
         setPacientesMap(map);
       } catch (error) {
-        console.error("Error al cargar pacientes:", error);
+        toast.error("❌ Error al cargar pacientes");
       }
     };
     fetchPacientes();
   }, []);
 
-// búsqueda de atenciones por nombre o paciente_id
-const handleSearch = async () => {
-  if (!search.trim()) return;
-  try {
-    const data = await buscarAtenciones({ query: search });  // 👈 cambio aquí
-    setAtenciones(Array.isArray(data) ? data : []);
-  } catch (error) {
-    console.error("Error en la búsqueda de atenciones:", error);
-  }
-};
+  // búsqueda de atenciones
+  const handleSearch = async () => {
+    if (!search.trim()) return;
+    try {
+      setLoading(true);
+      const data = await buscarAtenciones({ query: search });
+      setAtenciones(Array.isArray(data) ? data : []);
+    } catch (error) {
+      toast.error("❌ Error en la búsqueda de atenciones");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!pacienteId) return;
@@ -48,13 +63,61 @@ const handleSearch = async () => {
         const data = await listarAtenciones(pacienteId);
         setAtenciones(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error("Error al cargar atenciones:", error);
+        toast.error("❌ Error al cargar atenciones");
       } finally {
         setLoading(false);
       }
     };
     fetchAtenciones();
   }, [pacienteId]);
+
+  // Habilitar edición
+  const handleEditar = (a) => {
+    setEditando(a._id);
+    setFormEdicion({
+      fase_intermedia: a.tratamiento?.fase_intermedia || "",
+      fase_final: a.tratamiento?.fase_final || "",
+      notas: a.notas || "",
+    });
+  };
+
+  // Guardar cambios
+// Guardar cambios
+const handleGuardar = async (id) => {
+  try {
+    // Ojo: notas va fuera de tratamiento
+    const payload = {
+      tratamiento: {
+        // mantenemos lo que el usuario editó
+        fase_intermedia: formEdicion.fase_intermedia || undefined,
+        fase_final: formEdicion.fase_final || undefined,
+      },
+      notas: formEdicion.notas || undefined,
+    };
+
+    await updateAtencion(id, payload);
+
+    setAtenciones((prev) =>
+      prev.map((a) =>
+        a._id === id
+          ? {
+              ...a,
+              tratamiento: {
+                ...a.tratamiento,
+                fase_intermedia: formEdicion.fase_intermedia,
+                fase_final: formEdicion.fase_final,
+              },
+              notas: formEdicion.notas,
+            }
+          : a
+      )
+    );
+    setEditando(null);
+    toast.success("✅ Atención actualizada");
+  } catch (error) {
+    toast.error("❌ Error al actualizar atención");
+  }
+};
 
   return (
     <div className="listado-atenciones">
@@ -64,7 +127,7 @@ const handleSearch = async () => {
       <div>
         <input
           type="text"
-          placeholder="Buscar atenciones por paciente_id"
+          placeholder="Buscar atenciones por paciente_id o nombre"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -72,7 +135,10 @@ const handleSearch = async () => {
       </div>
 
       <label>Seleccione Paciente: </label>
-      <select value={pacienteId} onChange={(e) => setPacienteId(e.target.value)}>
+      <select
+        value={pacienteId}
+        onChange={(e) => setPacienteId(e.target.value)}
+      >
         <option value="">-- Seleccione --</option>
         {pacientes.map((p) => (
           <option key={p.paciente_id} value={p.paciente_id}>
@@ -87,23 +153,24 @@ const handleSearch = async () => {
         <table>
           <thead>
             <tr>
-              <th>Atención</th> 
+              <th>Atención</th>
               <th>Paciente</th>
-              <th>Paciente</th> 
+              <th>Nombre</th>
               <th>Fecha</th>
               <th>Fisioterapeuta</th>
               <th>Motivo Consulta</th>
               <th>Antecedentes</th>
               <th>Signos Vitales</th>
-              <th>Diagnóstico / Tratamiento</th>
+              <th>Tratamiento</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {atenciones.map((a) => (
               <tr key={a._id}>
-                <td>{a.atencion_id || "-"}</td> {/* ✅ Mostrar ID de la atención */}
-                <td>{a.paciente_id}</td>        {/* ✅ Mostrar ID del paciente */}
-                <td>{pacientesMap[a.paciente_id] || a.paciente_id}</td> {/* <-- Mostrar nombre */}
+                <td>{a.atencion_id || "-"}</td>
+                <td>{a.paciente_id}</td>
+                <td>{pacientesMap[a.paciente_id] || a.paciente_id}</td>
                 <td>{a.fecha}</td>
                 <td>{a.quien_atiende}</td>
                 <td>{a.motivo_consulta}</td>
@@ -117,9 +184,57 @@ const handleSearch = async () => {
                   <p><strong>Talla:</strong> {a.signos_vitales?.talla || "-"} cm</p>
                 </td>
                 <td>
-                  <strong>Diagnóstico:</strong> {a.diagnostico || "-"} <br />
-                  <strong>Tratamiento:</strong> {a.tratamiento || "-"} <br />
-                  <strong>Notas:</strong> {a.notas || "-"}
+                  {editando === a._id ? (
+                    <>
+                      <textarea
+                        placeholder="Fase intermedia"
+                        value={formEdicion.fase_intermedia}
+                        onChange={(e) =>
+                          setFormEdicion({
+                            ...formEdicion,
+                            fase_intermedia: e.target.value,
+                          })
+                        }
+                      />
+                      <textarea
+                        placeholder="Fase final"
+                        value={formEdicion.fase_final}
+                        onChange={(e) =>
+                          setFormEdicion({
+                            ...formEdicion,
+                            fase_final: e.target.value,
+                          })
+                        }
+                      />
+                      <textarea
+                        placeholder="Notas"
+                        value={formEdicion.notas}
+                        onChange={(e) =>
+                          setFormEdicion({
+                            ...formEdicion,
+                            notas: e.target.value,
+                          })
+                        }
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <strong>Inicial:</strong>{" "}
+                      {a.tratamiento?.fase_inicial || "-"} <br />
+                      <strong>Intermedia:</strong>{" "}
+                      {a.tratamiento?.fase_intermedia || "-"} <br />
+                      <strong>Final:</strong>{" "}
+                      {a.tratamiento?.fase_final || "-"} <br />
+                      <strong>Notas:</strong> {a.notas || "-"}
+                    </>
+                  )}
+                </td>
+                <td>
+                  {editando === a._id ? (
+                    <button onClick={() => handleGuardar(a._id)}>💾 Guardar</button>
+                  ) : (
+                    <button onClick={() => handleEditar(a)}>✏️ Editar</button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -127,7 +242,11 @@ const handleSearch = async () => {
         </table>
       )}
 
-      {!loading && pacienteId && atenciones.length === 0 && <p>No hay atenciones registradas.</p>}
+      {!loading && pacienteId && atenciones.length === 0 && (
+        <p>No hay atenciones registradas.</p>
+      )}
+
+      <ToastContainer position="top-right" />
     </div>
   );
 }

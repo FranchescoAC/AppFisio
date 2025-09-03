@@ -45,12 +45,3 @@ def obtener_siguiente_id():
     seq = counter["seq"] + 1 if counter else 1
     return {"next_paciente_id": f"P{seq}"}
 
-
-# Listar todas las atenciones 
-@app.get("/atenciones/listar")
-def listar_atenciones():
-     atenciones = []
-     for a in atenciones_collection.find():
-         a["_id"] = str(a["_id"])
-         atenciones.append(a)
-         return atenciones
