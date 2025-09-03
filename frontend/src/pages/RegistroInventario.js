@@ -100,6 +100,7 @@ const RegistroInventario = () => {
       toast.error("No se pudo eliminar el producto");
     }
   };
+  
 const venderItem = async (item) => {
   const cantidad = cantidadesVenta[item.item_id] || 1;
 

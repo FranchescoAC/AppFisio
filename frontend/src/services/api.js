@@ -2,6 +2,7 @@ export const API_URL = "http://127.0.0.1:8001";
 export const API_URL2 = "http://127.0.0.1:8002";
 export const API_URL3 = "http://127.0.0.1:8003";
 export const API_URL4 = "http://127.0.0.1:8004";
+export const API_AUTH = "http://127.0.0.1:8005";
 
 
 export async function registrarPaciente(data) {
@@ -214,4 +215,72 @@ export async function updateAtencion(atencion_id, data) {
   });
   if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
   return await response.json();
+}
+
+// AUTENTICACIÓN
+// 🔒 Login usuario
+// AUTENTICACIÓN
+// 🔒 Login usuario
+export async function loginUsuario(email, password) {
+  try {
+    const response = await fetch(`${API_AUTH}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    // Intentamos parsear la respuesta
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Error al procesar respuesta del servidor");
+    }
+
+    // Si no hay token o la respuesta no es OK, lanzar error
+    if (!response.ok || !data.token) {
+      throw new Error(data.msg || "Credenciales inválidas");
+    }
+
+    // Guardamos token y rol en localStorage
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("rol", data.rol);
+
+    return data; // { email, rol, token }
+  } catch (error) {
+    console.error("Error en loginUsuario:", error);
+    throw error;
+  }
+}
+
+// 🔒 Obtener rol actual
+export function getUserRole() {
+  return localStorage.getItem("rol");
+}
+
+// 🔒 Cerrar sesión
+export function logoutUsuario() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("rol");
+}
+
+// 🔒 Registro usuario
+export async function registerUsuario({ email, password, rol }) {
+  try {
+    const response = await fetch(`${API_AUTH}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, rol }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || "Error al registrar usuario");
+    }
+
+    return await response.json(); // { msg: "Usuario creado" }
+  } catch (error) {
+    console.error("Error en registerUsuario:", error);
+    throw error;
+  }
 }

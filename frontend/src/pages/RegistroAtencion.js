@@ -14,6 +14,8 @@ const fisioterapeutas = ["ELINA", "MARITZA", "ALAN"];
 
 function RegistroAtencion() {
   const [pacientes, setPacientes] = useState([]);
+  const [pacientesFiltrados, setPacientesFiltrados] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
   const [form, setForm] = useState({
     paciente_id: "",
     fecha: "",
@@ -43,6 +45,7 @@ function RegistroAtencion() {
       try {
         const data = await listarPacientes();
         setPacientes(data);
+        setPacientesFiltrados(data);
       } catch (error) {
         console.error("Error al cargar pacientes:", error);
         toast.error("❌ Error al cargar pacientes");
@@ -50,6 +53,28 @@ function RegistroAtencion() {
     };
     fetchPacientes();
   }, []);
+
+  // Filtrar automáticamente al escribir
+  useEffect(() => {
+    if (!busqueda.trim()) {
+      setPacientesFiltrados(pacientes);
+      setForm((prev) => ({ ...prev, paciente_id: "" }));
+      return;
+    }
+
+    const resultado = pacientes.filter((p) =>
+      p.nombres_completos.toLowerCase().includes(busqueda.toLowerCase())
+    );
+
+    setPacientesFiltrados(resultado);
+
+    // Si hay solo un paciente, seleccionarlo automáticamente
+    if (resultado.length === 1) {
+      setForm((prev) => ({ ...prev, paciente_id: resultado[0].paciente_id }));
+    } else {
+      setForm((prev) => ({ ...prev, paciente_id: "" }));
+    }
+  }, [busqueda, pacientes]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -106,6 +131,7 @@ function RegistroAtencion() {
         tratamiento: { fase_inicial: "", fase_intermedia: "", fase_final: "" },
         notas: "",
       });
+      setBusqueda("");
     } catch (error) {
       toast.error("❌ Error al registrar atención");
       console.error(error);
@@ -118,6 +144,15 @@ function RegistroAtencion() {
         <div className="card">
           <h3>Información General</h3>
           <p>Próximo ID de Atención: <strong>{nextAtencionId || "A..."}</strong></p>
+
+          {/* Barra de búsqueda automática */}
+          <input
+            type="text"
+            placeholder="Buscar paciente por nombre..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+
           <select
             name="paciente_id"
             value={form.paciente_id}
@@ -125,12 +160,13 @@ function RegistroAtencion() {
             required
           >
             <option value="">-- Selecciona Paciente --</option>
-            {pacientes.map(p => (
+            {pacientesFiltrados.map(p => (
               <option key={p.paciente_id} value={p.paciente_id}>
                 {p.nombres_completos} ({p.paciente_id})
               </option>
             ))}
           </select>
+
           <input name="fecha" type="date" onChange={handleChange} value={form.fecha} required />
           <select name="quien_atiende" value={form.quien_atiende} onChange={handleChange} required>
             <option value="">-- Seleccione Fisioterapeuta --</option>
