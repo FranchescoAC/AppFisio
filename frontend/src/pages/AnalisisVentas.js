@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "../App.css";
 import { getVentas } from "../services/api";
 
 const AnalisisVentas = () => {

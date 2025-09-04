@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { registrarPaciente, obtenerSiguientePacienteId } from "../services/api";
 import "../RegistroAtencion.css"; 
+import "../App.css";
 
 function RegistroPaciente() {
   const [form, setForm] = useState({

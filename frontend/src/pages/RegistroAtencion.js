@@ -3,6 +3,7 @@ import { listarPacientes, registrarAtencion } from "../services/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../RegistroAtencion.css";
+import "../App.css";
 
 const antecedentesOpciones = [
   "DIABETES", "HEPATOPATÍA", "ASMA", "ENF. ENDOCRINAS",

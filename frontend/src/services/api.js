@@ -219,8 +219,6 @@ export async function updateAtencion(atencion_id, data) {
 
 // AUTENTICACIÓN
 // 🔒 Login usuario
-// AUTENTICACIÓN
-// 🔒 Login usuario
 export async function loginUsuario(email, password) {
   try {
     const response = await fetch(`${API_AUTH}/auth/login`, {
@@ -229,26 +227,41 @@ export async function loginUsuario(email, password) {
       body: JSON.stringify({ email, password }),
     });
 
-    // Intentamos parsear la respuesta
-    let data;
-    try {
-      data = await response.json();
-    } catch {
-      throw new Error("Error al procesar respuesta del servidor");
-    }
+    const data = await response.json();
 
-    // Si no hay token o la respuesta no es OK, lanzar error
     if (!response.ok || !data.token) {
-      throw new Error(data.msg || "Credenciales inválidas");
+      throw new Error(data?.detail || "Credenciales inválidas");
     }
-
-    // Guardamos token y rol en localStorage
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("rol", data.rol);
-
     return data; // { email, rol, token }
   } catch (error) {
     console.error("Error en loginUsuario:", error);
+    throw error;
+  }
+}
+
+// ✅ Registrar usuario (SOLO ADMIN) — incluye token en headers
+export async function registerUsuario({ email, password, rol }) {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_AUTH}/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // ⬇⬇⬇ IMPORTANTE: enviar Bearer token
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ email, password, rol }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.detail || "Error al registrar usuario");
+    }
+    // backend devuelve { email, rol, msg }
+    return data;
+  } catch (error) {
+    console.error("Error en registerUsuario:", error);
     throw error;
   }
 }
@@ -264,23 +277,3 @@ export function logoutUsuario() {
   localStorage.removeItem("rol");
 }
 
-// 🔒 Registro usuario
-export async function registerUsuario({ email, password, rol }) {
-  try {
-    const response = await fetch(`${API_AUTH}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, rol }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(text || "Error al registrar usuario");
-    }
-
-    return await response.json(); // { msg: "Usuario creado" }
-  } catch (error) {
-    console.error("Error en registerUsuario:", error);
-    throw error;
-  }
-}

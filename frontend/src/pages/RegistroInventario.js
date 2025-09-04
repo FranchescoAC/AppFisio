@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getInventario, addItem, updateItem, deleteItem, registrarVenta } from "../services/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "../App.css";
 
 const RegistroInventario = () => {
   const [inventario, setInventario] = useState([]);

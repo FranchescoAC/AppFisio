@@ -20,9 +20,20 @@ app.add_middleware(
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
+# --- Helpers ---
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    payload = decode_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    return payload  # {email, rol}
+
 # --- Endpoints ---
 @app.post("/auth/register")
-def register(usuario: Usuario):
+def register(usuario: Usuario, current_user=Depends(get_current_user)):
+    # Solo ADMIN puede registrar
+    if current_user.get("rol") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+
     if usuarios_collection.find_one({"email": usuario.email}):
         raise HTTPException(status_code=400, detail="Usuario ya existe")
 
@@ -32,7 +43,8 @@ def register(usuario: Usuario):
         "password": hashed_pass,
         "rol": usuario.rol
     })
-    return {"msg": "Usuario creado"}
+    # Devolvemos email/rol para que el frontend muestre toast correcto
+    return {"email": usuario.email, "rol": usuario.rol, "msg": "Usuario creado"}
 
 @app.post("/auth/login", response_model=UsuarioResponse)
 def login(usuario: UsuarioLogin):
@@ -43,13 +55,7 @@ def login(usuario: UsuarioLogin):
     token = create_token({"email": usuario.email, "rol": user["rol"]})
     return {"email": usuario.email, "rol": user["rol"], "token": token}
 
-# Middleware para proteger rutas
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    payload = decode_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Token inválido")
-    return payload
-
+# Ejemplos de rutas protegidas por rol
 @app.get("/pacientes")
 def listar_pacientes(user=Depends(get_current_user)):
     if user["rol"] not in ["fisioterapeuta", "admin"]:
