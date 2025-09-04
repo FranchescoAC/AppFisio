@@ -6,7 +6,9 @@ import ListadoAtenciones from "./pages/ListadoAtenciones";
 import RegistroInventario from "./pages/RegistroInventario";
 import ListadoInventario from "./pages/ListadoInventario";
 import AnalisisVentas from "./pages/AnalisisVentas";
+import Home from "./pages/Home";
 import "./App.css";
+import logo from "./img/Logo1.png";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { getUserRole, logoutUsuario } from "./services/api";
@@ -28,16 +30,9 @@ function App() {
 
   return (
     <Router>
-      <nav
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "12px",
-          marginBottom: "20px",
-        }}
-      >
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+<nav>
+  <img src={logo} alt="Logo Rojas" />
+  <div>
           <Link to="/registro-paciente">Registrar Paciente</Link>
           <Link to="/listado-inventario">Listado Inventario</Link>
 
@@ -57,29 +52,19 @@ function App() {
             </>
           )}
         </div>
-
-        <div>
-          {!rol ? (
-            <Link to="/login">Login</Link>
-          ) : (
-            <button
-              onClick={handleLogout}
-              style={{
-                padding: "5px 15px",
-                background: "#d9534f",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-            >
-              🔒 Cerrar Sesión
-            </button>
-          )}
-        </div>
-      </nav>
+<div>
+    {!rol ? (
+      <Link to="/login">Login</Link>
+    ) : (
+      <button className="logout" onClick={handleLogout}>
+        🔒 Cerrar Sesión
+      </button>
+    )}
+  </div>
+</nav>
 
       <Routes>
+        <Route path="/Home" element={<Home />} />
         <Route path="/login" element={<Login setRol={setRol} />} />
 
         {/* /register solo admin */}
