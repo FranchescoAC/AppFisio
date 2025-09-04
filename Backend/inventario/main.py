@@ -38,16 +38,27 @@ def obtener_inventario():
     return items
 
 # -------------------
-# ✅ Actualizar item (cantidad o cualquier campo)
+# ✅ Actualizar item (cualquier campo, cantidad se suma o resta correctamente)
 # -------------------
 @app.put("/inventario/{item_id}")
 def actualizar_item(item_id: str, data: dict):
     item = inventario_collection.find_one({"item_id": item_id})
     if not item:
         raise HTTPException(status_code=404, detail="Item no encontrado")
-    nueva_cantidad = item["cantidad"] + data.get("cantidad", 0)
-    inventario_collection.update_one({"item_id": item_id}, {"$set": {"cantidad": nueva_cantidad}})
-    return {"cantidad": nueva_cantidad}
+    
+    update_data = {}
+    for key, value in data.items():
+        if key in ["nombre", "descripcion", "unidad", "imagen_url", "precio_compra", "precio_venta"]:
+            update_data[key] = value
+        elif key == "cantidad":
+            # Si la cantidad viene negativa, restar; si positiva, sumar
+            nueva_cantidad = item.get("cantidad", 0) + value
+            if nueva_cantidad < 0:
+                raise HTTPException(status_code=400, detail="Cantidad no puede ser negativa")
+            update_data["cantidad"] = nueva_cantidad
+
+    inventario_collection.update_one({"item_id": item_id}, {"$set": update_data})
+    return {"msg": "Item actualizado", **update_data}
 
 # -------------------
 # ✅ Eliminar item

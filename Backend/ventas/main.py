@@ -4,6 +4,7 @@ from datetime import datetime
 from bson.objectid import ObjectId
 from ventas.database import ventas_collection  # Suponemos MongoDB configurado
 from ventas.models import Venta, VentaInput
+from inventario.database import inventario_collection 
 
 
 app = FastAPI()

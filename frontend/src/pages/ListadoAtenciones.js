@@ -114,7 +114,7 @@ const handleGuardar = async (id) => {
       )
     );
     setEditando(null);
-    toast.success("✅ Atención actualizada");
+    toast.success("Atención actualizada");
   } catch (error) {
     toast.error("❌ Error al actualizar atención");
   }

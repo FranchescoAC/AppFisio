@@ -113,7 +113,7 @@ function RegistroAtencion() {
       const data = await registrarAtencion(form);
       setNextAtencionId(data.atencion_id);
 
-      toast.success(`✅ Atención registrada con ID: ${data.atencion_id}`);
+      toast.success(`Atención registrada con ID: ${data.atencion_id}`);
 
       setForm({
         paciente_id: "",
