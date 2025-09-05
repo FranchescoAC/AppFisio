@@ -168,14 +168,18 @@ tbody tr:nth-child(even) {
   box-shadow: none !important; /* 🚀 Sin sombra */
 }
 .Toastify__toast--success {
-  background: #20BFA9 !important;
+  background: #7eedde !important;
 }
 .Toastify__toast--error {
-  background: #d9534f !important;
+  background: #f8a7a4 !important;
 }
 .Toastify__toast--info {
   background: #0057B8 !important;
 }
+.Toastify__close-button {
+  display: none !important;
+}
+
 
 
 /* === RESPONSIVE TABLET === */

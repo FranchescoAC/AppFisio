@@ -31,28 +31,33 @@ function App() {
   return (
     <Router>
 <nav>
-  <img src={logo} alt="Logo Rojas" />
+  {/* ✅ Logo clickeable que lleva al Home */}
+  <Link to="/">
+    <img src={logo} alt="Logo Rojas" style={{ cursor: "pointer" }} />
+  </Link>
+
   <div>
-          <Link to="/registro-paciente">Registrar Paciente</Link>
-          <Link to="/listado-inventario">Listado Inventario</Link>
+    <Link to="/registro-paciente">Registrar Paciente</Link>
+    <Link to="/listado-inventario">Listado Inventario</Link>
 
-          {(rol === "fisioterapeuta" || rol === "admin") && (
-            <>
-              <Link to="/listado-atenciones">Listado Atenciones</Link>
-              <Link to="/listado-pacientes">Listado Pacientes</Link>
-              <Link to="/registro-atencion">Registrar Atención</Link>
-              <Link to="/registro-inventario">Registrar Inventario</Link>
-            </>
-          )}
+    {(rol === "fisioterapeuta" || rol === "admin") && (
+      <>
+        <Link to="/listado-atenciones">Listado Atenciones</Link>
+        <Link to="/listado-pacientes">Listado Pacientes</Link>
+        <Link to="/registro-atencion">Registrar Atención</Link>
+        <Link to="/registro-inventario">Registrar Inventario</Link>
+      </>
+    )}
 
-          {rol === "admin" && (
-            <>
-              <Link to="/analisis-ventas">Análisis Ventas</Link>
-              <Link to="/register">Registrar Usuario</Link>
-            </>
-          )}
-        </div>
-<div>
+    {rol === "admin" && (
+      <>
+        <Link to="/analisis-ventas">Análisis Ventas</Link>
+        <Link to="/register">Registrar Usuario</Link>
+      </>
+    )}
+  </div>
+
+  <div>
     {!rol ? (
       <Link to="/login">Login</Link>
     ) : (
@@ -62,6 +67,7 @@ function App() {
     )}
   </div>
 </nav>
+
 
       <Routes>
   {/* ✅ Ruta raíz y /Home llevan a Home */}

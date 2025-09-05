@@ -6,7 +6,10 @@ db = client["clinica_fisio"]
 pacientes_collection = db["pacientes"]
 counters_collection = db["counters"]
 
+# Índices únicos
 pacientes_collection.create_index("paciente_id", unique=True)
+pacientes_collection.create_index("email", unique=True)
+pacientes_collection.create_index("ci", unique=True)
 
 def get_next_paciente_id():
     counter = counters_collection.find_one_and_update(

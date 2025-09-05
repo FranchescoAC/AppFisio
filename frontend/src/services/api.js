@@ -5,22 +5,27 @@
   export const API_AUTH = "http://127.0.0.1:8005";
 
 
-  export async function registrarPaciente(data) {
-    try {
-      const response = await fetch(`${API_URL}/pacientes/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-      return await response.json(); // <-- Aquí puede fallar si el backend devuelve algo inesperado
-    } catch (error) {
-      console.error("Error en registrarPaciente:", error);
-      throw error;
+export async function registrarPaciente(data) {
+  try {
+    const response = await fetch(`${API_URL}/pacientes/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      // 🔥 Lanza error con el detail del backend
+      throw new Error(result?.detail || `Error HTTP: ${response.status}`);
     }
+
+    return result;
+  } catch (error) {
+    console.error("Error en registrarPaciente:", error);
+    throw error;
   }
+}
 
 
   export async function listarPacientes() {

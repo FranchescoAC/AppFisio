@@ -3,14 +3,18 @@ import { listarPacientes } from "../services/api";
 import "../App.css";
 
 function ListadoPacientes() {
-  const [pacientes, setPacientes] = useState([]);
+  const [todosPacientes, setTodosPacientes] = useState([]);
+  const [pacientes, setPacientes] = useState([]); // solo últimos 10
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
     async function fetchPacientes() {
       try {
         const data = await listarPacientes();
-        setPacientes(data);
+        if (Array.isArray(data)) {
+          setTodosPacientes(data);
+          setPacientes(data.slice(-10)); // ✅ mostrar solo los últimos 10
+        }
       } catch (error) {
         console.error("Error al obtener pacientes:", error);
       }
@@ -18,9 +22,13 @@ function ListadoPacientes() {
     fetchPacientes();
   }, []);
 
-  const pacientesFiltrados = pacientes.filter((p) =>
-    p.nombres_completos?.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  // 🔎 Si hay búsqueda → usar todos los pacientes
+  // sino → mostrar solo los últimos 10
+  const pacientesFiltrados = busqueda
+    ? todosPacientes.filter((p) =>
+        p.nombres_completos?.toLowerCase().includes(busqueda.toLowerCase())
+      )
+    : pacientes;
 
   return (
     <div>
