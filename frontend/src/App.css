@@ -164,6 +164,8 @@ tbody tr:nth-child(even) {
   border-radius: 10px !important;
   font-family: 'Poppins', sans-serif !important;
   font-size: 0.95rem;
+  color: white !important;
+  box-shadow: none !important; /* 🚀 Sin sombra */
 }
 .Toastify__toast--success {
   background: #20BFA9 !important;
@@ -174,6 +176,7 @@ tbody tr:nth-child(even) {
 .Toastify__toast--info {
   background: #0057B8 !important;
 }
+
 
 /* === RESPONSIVE TABLET === */
 @media (max-width: 1024px) {
@@ -213,11 +216,13 @@ tbody tr:nth-child(even) {
   margin-top: 15px;
 }
 
+/* === INVENTARIO === */
 .item-card {
-  background: #F9F9F9;
-  border-radius: 10px;
+  background: #E6F2FF;
+  border-left: 6px solid #3399FF;
   padding: 15px;
   margin-bottom: 15px;
+  border-radius: 10px;
   box-shadow: 0px 2px 6px rgba(0,0,0,0.08);
 }
 
@@ -241,7 +246,7 @@ tbody tr:nth-child(even) {
 
 .item-actions button {
   flex: 1;
-  padding: 8px;
+  padding: 10px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -252,9 +257,13 @@ tbody tr:nth-child(even) {
   opacity: 0.9;
 }
 
-.item-actions .sell-btn {
-  background: #20BFA9;
+.item-actions .sell-btn,
+.btn-vender {
+  background: #ff9800;
   color: white;
+  padding: 14px 28px;
+  font-size: 1.1rem;
+  font-weight: bold;
 }
 
 .item-actions .stock-btn {
@@ -262,12 +271,19 @@ tbody tr:nth-child(even) {
   color: white;
 }
 
-.item-actions .delete-btn {
+.item-actions .delete-btn,
+.delete-btn {
   background: #d9534f;
   color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
 }
 
-/* Análisis de ventas */
+/* === ANÁLISIS DE VENTAS === */
 .highlight-card {
   background: #E6F7F5; /* verde agua */
   border-left: 6px solid #20BFA9;
@@ -285,23 +301,147 @@ tbody tr:nth-child(even) {
   border-radius: 8px;
 }
 
-/* Registros normales - celestitos */
-.item-card {
-  background: #E6F2FF;
-  border-left: 6px solid #3399FF;
-  padding: 12px;
-  margin-bottom: 12px;
+/* === BUSCADOR PACIENTES === */
+.input-buscar {
+  padding: 8px 12px;
   border-radius: 6px;
+  border: 1px solid #ccc;
+  margin: 10px 0 20px 0;
+  width: 100%;
+}
+/* === LISTADO ATENCIONES === */
+.titulo-atenciones {
+  text-align: center;
+  color: #0057B8;      /* Azul corporativo */
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  font-weight: 700;
 }
 
-.delete-btn {
-  background: #d9534f;
+.btn-buscar {
+  background: #20BFA9; /* Verde corporativo */
   color: white;
-  padding: 10px 20px;   /* más grande */
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-left: 10px;
+  transition: background 0.3s ease;
+}
+
+.btn-buscar:hover {
+  background: #17a18f;
+}
+/* === BOTONES INVENTARIO === */
+.btn-abrir {
+  background: #20BFA9;  /* Verde corporativo */
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 15px;
+  transition: background 0.3s ease;
+}
+.btn-abrir:hover {
+  background: #17a18f;
+}
+
+.btn-cerrar {
+  background: #d9534f;  /* Rojo cerrar */
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 15px;
+  transition: background 0.3s ease;
+}
+.btn-cerrar:hover {
+  background: #c9302c;
+}
+
+.btn-agregar {
+  background: #0057B8; /* Azul corporativo */
+  color: white;
+  padding: 12px 20px;
+  border: none;
   border-radius: 6px;
   font-weight: bold;
+  font-size: 1rem;
   cursor: pointer;
-  width: 100%;          /* ocupa todo el ancho */
   margin-top: 10px;
+  transition: background 0.3s ease;
+  width: 100%;
+}
+.btn-agregar:hover {
+  background: #00408a;
 }
 
+/* === FORMULARIO REGISTRO PACIENTE === */
+.form-paciente {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.1);
+  max-width: 700px;
+  margin: 40px auto;
+  border-top: 6px solid #20BFA9; /* Verde corporativo */
+  text-align: center; /* ✅ centramos contenido */
+}
+
+.form-paciente h2 {
+  color: #0057B8; /* Azul corporativo */
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.form-paciente p {
+  font-weight: 600;
+  color: #20BFA9; /* Verde corporativo */
+  margin-bottom: 20px;
+}
+
+.form-paciente input,
+.form-paciente select,
+.form-paciente textarea {
+  width: 100%;
+  padding: 14px;
+  margin: 12px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #F9F9F9;
+  font-size: 1rem;
+  transition: border 0.3s ease;
+}
+
+.form-paciente input:focus,
+.form-paciente select:focus,
+.form-paciente textarea:focus {
+  border: 1px solid #20BFA9;
+  outline: none;
+  background: #E6F7F5; /* verde agua al focus */
+}
+
+.form-paciente button {
+  width: 100%;
+  padding: 16px;
+  background: #0057B8; /* Azul corporativo */
+  color: white;
+  border: none;
+  border-radius: 10px;
+  margin-top: 15px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.form-paciente button:hover {
+  background: #00408a;
+}

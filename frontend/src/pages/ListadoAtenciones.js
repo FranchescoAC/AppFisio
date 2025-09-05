@@ -122,7 +122,7 @@ const handleGuardar = async (id) => {
 
   return (
     <div className="listado-atenciones">
-      <h2>Historial de Atenciones</h2>
+      <h2 className="titulo-atenciones">Historial de Atenciones</h2>
 
       {/* 🔎 Barra de búsqueda */}
       <div>
@@ -132,7 +132,8 @@ const handleGuardar = async (id) => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button onClick={handleSearch}>Buscar</button>
+        <button onClick={handleSearch} className="btn-buscar">🔎 Buscar</button>
+
       </div>
 
       <label>Seleccione Paciente: </label>
@@ -232,9 +233,10 @@ const handleGuardar = async (id) => {
                 </td>
                 <td>
                   {editando === a._id ? (
-                    <button onClick={() => handleGuardar(a._id)}>💾 Guardar</button>
+                  <button onClick={() => handleGuardar(a._id)} className="btn-buscar">💾 Guardar</button>
+                    
                   ) : (
-                    <button onClick={() => handleEditar(a)}>✏️ Editar</button>
+                   <button onClick={() => handleEditar(a)} className="btn-buscar">✏️ Editar</button>
                   )}
                 </td>
               </tr>

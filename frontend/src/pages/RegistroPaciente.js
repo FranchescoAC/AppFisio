@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { registrarPaciente, obtenerSiguientePacienteId } from "../services/api";
-import "../RegistroAtencion.css"; 
 import "../App.css";
+import { ToastContainer, toast } from "react-toastify";
 
 function RegistroPaciente() {
   const [form, setForm] = useState({
@@ -35,22 +35,42 @@ function RegistroPaciente() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const data = await registrarPaciente(form);
-      alert(`Paciente registrado con ID: ${data.paciente_id}`);
-      setForm({ ...form, fecha_registro: "", nombres_completos: "", estado_civil: "soltero", domicilio: "", email: "", ci: "", edad: "", sexo: "Masculino", origen: "", telefono: "", motivo_consulta: "" });
-      // actualizar nextId
-      const next = await obtenerSiguientePacienteId();
-      setNextId(next.next_paciente_id);
-    } catch (error) {
-      alert("Error al registrar paciente");
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const data = await registrarPaciente(form);
+
+    // 🔥 Solo toast, sin alert
+    toast.success(`✅ Paciente registrado con ID: ${data.paciente_id}`);
+
+    setForm({
+      fecha_registro: "",
+      nombres_completos: "",
+      estado_civil: "soltero",
+      domicilio: "",
+      email: "",
+      ci: "",
+      edad: "",
+      sexo: "Masculino",
+      origen: "",
+      telefono: "",
+      motivo_consulta: "",
+    });
+
+    // actualizar nextId
+    const next = await obtenerSiguientePacienteId();
+    setNextId(next.next_paciente_id);
+
+  } catch (error) {
+    // ❌ también solo toast
+    toast.error("❌ Error al registrar paciente");
+  }
+};
+
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="form-paciente">
+      <h2>📝 Registro de Paciente</h2>
       <p>Próximo ID asignado: <strong>{nextId}</strong></p>
 
       <input name="fecha_registro" type="date" value={form.fecha_registro} onChange={handleChange} required />
@@ -74,6 +94,7 @@ function RegistroPaciente() {
       <textarea name="motivo_consulta" placeholder="Motivo de consulta" value={form.motivo_consulta} onChange={handleChange} />
 
       <button type="submit">Registrar Paciente</button>
+        <ToastContainer position="top-right" autoClose={3000}/>
     </form>
   );
 }

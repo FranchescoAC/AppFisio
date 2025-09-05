@@ -92,7 +92,9 @@ const RegistroInventario = () => {
   return (
     <div className="section-container">
       <h2>📦 Inventario</h2>
-      <button onClick={() => setMostrarRegistro(!mostrarRegistro)}>{mostrarRegistro ? "❌ Cerrar Registro" : "➕ Abrir Registro de Inventario"}</button>
+      <button onClick={() => setMostrarRegistro(!mostrarRegistro)}className={mostrarRegistro ? "btn-cerrar" : "btn-abrir"}>
+  {mostrarRegistro ? "❌ Cerrar Registro" : "➕ Abrir Registro de Inventario"}
+</button>
 
       {mostrarRegistro && (
         <div className="item-card">
@@ -105,7 +107,7 @@ const RegistroInventario = () => {
               onChange={e => setNuevoItem(prev => ({ ...prev, [field]: field==="cantidad"?Number(e.target.value):e.target.value }))}
             />
           ))}
-          <button onClick={handleAdd} className="sell-btn">➕ Agregar</button>
+          <button onClick={handleAdd} className="btn-agregar">➕ Agregar</button>
         </div>
       )}
 
@@ -119,7 +121,7 @@ const RegistroInventario = () => {
           <div className="item-actions">
             <input type="number" min="1" max={item.cantidad} value={cantidadesVenta[item.item_id] || 1}
               onChange={e => setCantidadesVenta(prev => ({ ...prev, [item.item_id]: parseInt(e.target.value)||1 }))}/>
-            <button onClick={() => venderItem(item)} className="sell-btn">💸 Vender</button>
+            <button onClick={() => venderItem(item)} className="btn-vender">💸 Vender</button>
           </div>
 
           <div className="item-actions">

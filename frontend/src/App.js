@@ -64,30 +64,35 @@ function App() {
 </nav>
 
       <Routes>
-        <Route path="/Home" element={<Home />} />
-        <Route path="/login" element={<Login setRol={setRol} />} />
+  {/* ✅ Ruta raíz y /Home llevan a Home */}
+  <Route path="/" element={<Home />} />
+  <Route path="/Home" element={<Home />} />
 
-        {/* /register solo admin */}
-        {rol === "admin" && <Route path="/register" element={<Register />} />}
+  <Route path="/login" element={<Login setRol={setRol} />} />
 
-        <Route path="/registro-paciente" element={<RegistroPaciente />} />
-        <Route path="/listado-inventario" element={<ListadoInventario />} />
+  {/* /register solo admin */}
+  {rol === "admin" && <Route path="/register" element={<Register />} />}
 
-        {(rol === "fisioterapeuta" || rol === "admin") && (
-          <>
-            <Route path="/listado-atenciones" element={<ListadoAtenciones />} />
-            <Route path="/listado-pacientes" element={<ListadoPacientes />} />
-            <Route path="/registro-atencion" element={<RegistroAtencion />} />
-            <Route path="/registro-inventario" element={<RegistroInventario />} />
-          </>
-        )}
+  <Route path="/registro-paciente" element={<RegistroPaciente />} />
+  <Route path="/listado-inventario" element={<ListadoInventario />} />
 
-        {rol === "admin" && (
-          <Route path="/analisis-ventas" element={<AnalisisVentas />} />
-        )}
+  {(rol === "fisioterapeuta" || rol === "admin") && (
+    <>
+      <Route path="/listado-atenciones" element={<ListadoAtenciones />} />
+      <Route path="/listado-pacientes" element={<ListadoPacientes />} />
+      <Route path="/registro-atencion" element={<RegistroAtencion />} />
+      <Route path="/registro-inventario" element={<RegistroInventario />} />
+    </>
+  )}
 
-        <Route path="*" element={<Navigate to="/listado-inventario" />} />
-      </Routes>
+  {rol === "admin" && (
+    <Route path="/analisis-ventas" element={<AnalisisVentas />} />
+  )}
+
+  {/* ✅ Si no encuentra ruta, redirige al Home */}
+  <Route path="*" element={<Navigate to="/" />} />
+</Routes>
+
 
       <ToastContainer position="top-right" autoClose={3000} />
     </Router>
