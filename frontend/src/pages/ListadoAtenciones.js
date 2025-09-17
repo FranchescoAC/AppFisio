@@ -156,7 +156,6 @@ const handleGuardar = async (id) => {
           <thead>
             <tr>
               <th>Atención</th>
-              <th>Paciente</th>
               <th>Nombre</th>
               <th>Fecha</th>
               <th>Fisioterapeuta</th>
@@ -171,7 +170,6 @@ const handleGuardar = async (id) => {
             {atenciones.map((a) => (
               <tr key={a._id}>
                 <td>{a.atencion_id || "-"}</td>
-                <td>{a.paciente_id}</td>
                 <td>{pacientesMap[a.paciente_id] || a.paciente_id}</td>
                 <td>{a.fecha}</td>
                 <td>{a.quien_atiende}</td>

@@ -15,7 +15,6 @@ function RegistroPaciente() {
     sexo: "Masculino",
     origen: "",
     telefono: "",
-    motivo_consulta: "",
   });
   const [nextId, setNextId] = useState("");
 
@@ -81,7 +80,6 @@ function RegistroPaciente() {
         sexo: "Masculino",
         origen: "",
         telefono: "",
-        motivo_consulta: "",
       });
 
       const next = await obtenerSiguientePacienteId();
@@ -123,8 +121,6 @@ function RegistroPaciente() {
       </select>
       <input name="origen" placeholder="Origen" value={form.origen} onChange={handleChange} required />
       <input name="telefono" placeholder="Teléfono (10 dígitos)" value={form.telefono} onChange={handleChange} required maxLength="10" />
-      <textarea name="motivo_consulta" placeholder="Motivo de consulta" value={form.motivo_consulta} onChange={handleChange} />
-
       <button type="submit">Registrar Paciente</button>
       <ToastContainer position="top-right" autoClose={3000}/>
     </form>

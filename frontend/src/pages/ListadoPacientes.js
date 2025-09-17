@@ -31,8 +31,8 @@ function ListadoPacientes() {
     : pacientes;
 
   return (
-    <div>
-      <h2>Listado de Pacientes</h2>
+    <div className="listado-atenciones">
+      <h2 className="titulo-atenciones">Pacientes</h2>
       <input
         type="text"
         placeholder="🔎 Buscar paciente por nombre..."
@@ -55,7 +55,6 @@ function ListadoPacientes() {
             <th>Sexo</th>
             <th>Origen</th>
             <th>Teléfono</th>
-            <th>Motivo Consulta</th>
           </tr>
         </thead>
         <tbody>
@@ -72,7 +71,6 @@ function ListadoPacientes() {
               <td>{p.sexo ?? ""}</td>
               <td>{p.origen ?? ""}</td>
               <td>{p.telefono ?? ""}</td>
-              <td>{p.motivo_consulta ?? ""}</td>
             </tr>
           ))}
         </tbody>

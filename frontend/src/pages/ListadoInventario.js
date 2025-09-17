@@ -23,7 +23,7 @@ const ListadoInventario = () => {
 
 return (
   <div className="section-container">
-    <h2>📦 Inventario Disponible</h2>
+    <h2 className="titulo-atenciones">📦 Inventario Disponible</h2>
     <div>
       {inventario.map(item => (
         <div key={item.item_id} className="item-card">

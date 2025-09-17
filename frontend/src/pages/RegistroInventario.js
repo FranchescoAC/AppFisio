@@ -118,11 +118,23 @@ const RegistroInventario = () => {
           <p>🚀 Stock: {item.cantidad} {item.unidad}</p>
           <p>💲 Precio venta: ${item.precio_venta}</p>
 
-          <div className="item-actions">
-            <input type="number" min="1" max={item.cantidad} value={cantidadesVenta[item.item_id] || 1}
-              onChange={e => setCantidadesVenta(prev => ({ ...prev, [item.item_id]: parseInt(e.target.value)||1 }))}/>
-            <button onClick={() => venderItem(item)} className="btn-vender">💸 Vender</button>
-          </div>
+<div className="item-actions">
+  <input
+    type="number"
+    min="0"
+    max={item.cantidad}
+    value={cantidadesVenta[item.item_id] ?? ""} 
+    onChange={e =>
+      setCantidadesVenta(prev => ({
+        ...prev,
+        [item.item_id]: e.target.value === "" ? "" : parseInt(e.target.value)
+      }))
+    }
+  />
+  <button onClick={() => venderItem(item)} className="btn-vender">
+    💸 Vender
+  </button>
+</div>
 
           <div className="item-actions">
             <button onClick={() => cambiarCantidad(item,1)} className="stock-btn">➕ Stock</button>
