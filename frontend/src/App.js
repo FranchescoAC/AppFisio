@@ -8,6 +8,7 @@ import ListadoInventario from "./pages/ListadoInventario";
 import AnalisisVentas from "./pages/AnalisisVentas";
 import Home from "./pages/Home";
 import "./App.css";
+import { FaHome, FaUserPlus, FaClipboardList, FaFileInvoice, FaChartLine, FaSignInAlt, FaSignOutAlt } from "react-icons/fa";
 import logo from "./img/Logo1.png";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -30,43 +31,66 @@ function App() {
 
   return (
     <Router>
-<nav>
-  {/* ✅ Logo clickeable que lleva al Home */}
+<nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px", backgroundColor: "#1abc9c" }}>
+  {/* Logo */}
   <Link to="/">
-    <img src={logo} alt="Logo Rojas" style={{ cursor: "pointer" }} />
+    <img src={logo} alt="Logo Rojas" style={{ cursor: "pointer", height: "60px" }} />
   </Link>
 
-  <div>
-    <Link to="/registro-paciente">Registrar Paciente</Link>
-    <Link to="/listado-inventario">Listado Inventario</Link>
+  {/* Íconos principales */}
+  <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
+    <Link to="/registro-paciente" title="Registrar Paciente">
+      <FaUserPlus size={50} color="#F0F0F0" />
+    </Link>
+
+    <Link to="/listado-inventario" title="Listado Inventario">
+      <FaClipboardList size={50} color="#3498db" />
+    </Link>
 
     {(rol === "fisioterapeuta" || rol === "admin") && (
       <>
-        <Link to="/listado-atenciones">Listado Atenciones</Link>
-        <Link to="/listado-pacientes">Listado Pacientes</Link>
-        <Link to="/registro-atencion">Registrar Atención</Link>
-        <Link to="/registro-inventario">Registrar Inventario</Link>
+        <Link to="/listado-atenciones" title="Listado Atenciones">
+          <FaFileInvoice size={50} color="#9b59b6" />
+        </Link>
+        <Link to="/listado-pacientes" title="Listado Pacientes">
+          <FaClipboardList size={50} color="#e67e22" />
+        </Link>
+        <Link to="/registro-atencion" title="Registrar Atención">
+          <FaUserPlus size={50} color="#e74c3c" />
+        </Link>
+        <Link to="/registro-inventario" title="Registrar Inventario">
+          <FaClipboardList size={50} color="#f1c40f" />
+        </Link>
       </>
     )}
 
     {rol === "admin" && (
       <>
-        <Link to="/analisis-ventas">Análisis Ventas</Link>
-        <Link to="/register">Registrar Usuario</Link>
+        <Link to="/analisis-ventas" title="Análisis Ventas">
+          <FaChartLine size={50} color="#2ecc71" />
+        </Link>
+        <Link to="/register" title="Registrar Usuario">
+          <FaUserPlus size={50} color="#34495e" />
+        </Link>
       </>
     )}
   </div>
 
+  {/* Login / Logout */}
   <div>
     {!rol ? (
-      <Link to="/login">Login</Link>
+      <Link to="/login" title="Login">
+        <FaSignInAlt size={50} color="#2980b9" />
+      </Link>
     ) : (
-      <button className="logout" onClick={handleLogout}>
-        🔒 Cerrar Sesión
+      <button className="logout" onClick={handleLogout} title="Cerrar Sesión" style={{ background: "none", border: "none", cursor: "pointer" }}>
+        <FaSignOutAlt size={50} color="#c0392b" />
       </button>
     )}
   </div>
 </nav>
+
+
 
 
       <Routes>
