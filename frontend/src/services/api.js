@@ -1,8 +1,8 @@
-  export const API_URL = "http://localhost:8001";
-  export const API_URL2 = "http://localhost:8002";
-  export const API_URL3 = "http://localhost:8003";
-  export const API_URL4 = "http://localhost:8004";
-  export const API_AUTH = "http://localhost:8005";
+  export const API_URL = "http://192.168.101.171:8001";
+  export const API_URL2 = "http://192.168.101.171:8002";
+  export const API_URL3 = "http://192.168.101.171:8003";
+  export const API_URL4 = "http://192.168.101.171:8004";
+  export const API_AUTH = "http://192.168.101.171:8005";
 
 
 export async function registrarPaciente(data) {
