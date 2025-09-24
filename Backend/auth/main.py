@@ -9,7 +9,7 @@ from auth.utils import hash_password, verify_password, create_token, decode_toke
 app = FastAPI()
 
 # CORS
-origins = ["http://localhost:3000"]
+origins = ["http://192.168.101.171:3000"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

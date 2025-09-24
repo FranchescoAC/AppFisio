@@ -26,17 +26,52 @@ export async function registrarPaciente(data) {
   }
 }
 
-
-export async function listarPacientes() {
+export async function actualizarPaciente(_id, data) {
   try {
-    const response = await fetch(`${API_URL}/pacientes/listar`);
-    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    const response = await fetch(`${API_URL}/pacientes/${_id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const result = await response.json();
+      throw new Error(result?.detail || `Error HTTP: ${response.status}`);
+    }
+
     return await response.json();
   } catch (error) {
-    console.error("Error en listarPacientes:", error);
+    console.error("Error en actualizarPaciente:", error);
     throw error;
   }
 }
+
+export async function listarPacientes() {
+  const res = await fetch(`${API_URL}/pacientes/listar`);
+  return res.json();
+}
+
+export async function editarPaciente(paciente_id, data) {
+  try {
+    const response = await fetch(`${API_URL}/pacientes/${paciente_id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result?.detail || `Error HTTP: ${response.status}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error en editarPaciente:", error);
+    throw error;
+  }
+}
+
 
   export async function registrarAtencion(data) {
     try {
@@ -65,16 +100,10 @@ export async function listarPacientes() {
   }
 
   // Buscar pacientes por nombre o id
-  export async function buscarPacientes(query) {
-    try {
-      const response = await fetch(`${API_URL}/pacientes/buscar?query=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      console.error("Error en buscarPacientes:", error);
-      throw error;
-    }
-  }
+export async function buscarPacientes(query) {
+  const res = await fetch(`${API_URL}/pacientes/buscar?query=${query}`);
+  return res.json();
+}
 
 
   // Buscar atenciones por nombre o paciente_id

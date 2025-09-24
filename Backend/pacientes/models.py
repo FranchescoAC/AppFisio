@@ -11,6 +11,6 @@ class Paciente(BaseModel):
     ci: Optional[str] = None
     edad: Optional[int] = None
     sexo: Optional[str] = None
-    ciudad: Optional[str] = None
+    origen: Optional[str] = None
     telefono: Optional[str] = None
     motivo_consulta: Optional[str] = None

@@ -143,7 +143,7 @@ function RegistroAtencion() {
     <>
       <form className="form-container" onSubmit={handleSubmit}>
         <div className="card">
-          <h3>Información General</h3>
+          <h3 className="titulo-atenciones">Registrar Atención</h3>
           <p>Próximo ID de Atención: <strong>{nextAtencionId || "A..."}</strong></p>
 
           {/* Barra de búsqueda automática */}

@@ -338,6 +338,44 @@ tbody tr:nth-child(even) {
 .btn-buscar:hover {
   background: #17a18f;
 }
+/* BOTONES EDITAR Y GUARDAR PACIENTES */
+.btn-guardar {
+  background: #20BFA9; /* Verde */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 5px; /* Espacio arriba, abajo y a los lados */
+  transition: background 0.3s ease;
+  display: inline-block;
+}
+
+.btn-guardar:hover {
+  background: #17a18f;
+}
+
+.btn-cancelar {
+  background: #ad1808; /* Rojo */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 4px; /* Espacio arriba, abajo y a los lados */
+  transition: background 0.3s ease;
+  display: inline-block;
+}
+
+.btn-cancelar:hover {
+  background: #c0392b;
+}
+
+
 /* === BOTONES INVENTARIO === */
 .btn-abrir {
   background: #20BFA9;  /* Verde corporativo */
