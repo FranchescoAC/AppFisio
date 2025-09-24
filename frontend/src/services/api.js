@@ -16,7 +16,6 @@ export async function registrarPaciente(data) {
     const result = await response.json();
 
     if (!response.ok) {
-      // 🔥 Lanza error con el detail del backend
       throw new Error(result?.detail || `Error HTTP: ${response.status}`);
     }
 
@@ -28,17 +27,16 @@ export async function registrarPaciente(data) {
 }
 
 
-  export async function listarPacientes() {
-    try {
-      const response = await fetch(`${API_URL}/pacientes/listar`);
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      console.error("Error en listarPacientes:", error);
-      throw error;
-    }
+export async function listarPacientes() {
+  try {
+    const response = await fetch(`${API_URL}/pacientes/listar`);
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Error en listarPacientes:", error);
+    throw error;
   }
-
+}
 
   export async function registrarAtencion(data) {
     try {
@@ -91,16 +89,16 @@ export async function registrarPaciente(data) {
     }
   }
 
-  export async function obtenerSiguientePacienteId() {
-    try {
-      const response = await fetch(`${API_URL}/pacientes/next_id`);
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      console.error("Error en obtenerSiguientePacienteId:", error);
-      throw error;
-    }
+export async function obtenerSiguientePacienteId() {
+  try {
+    const response = await fetch(`${API_URL}/pacientes/next_id`);
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Error en obtenerSiguientePacienteId:", error);
+    throw error;
   }
+}
 
  // INVENTARIO
 export async function getInventario() {

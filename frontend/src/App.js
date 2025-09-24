@@ -43,9 +43,6 @@ function App() {
       <FaUserPlus size={50} color="#F0F0F0" />
     </Link>
 
-    <Link to="/listado-inventario" title="Listado Inventario">
-      <FaClipboardList size={50} color="#3498db" />
-    </Link>
 
     {(rol === "fisioterapeuta" || rol === "admin") && (
       <>
