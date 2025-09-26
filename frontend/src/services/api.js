@@ -282,3 +282,33 @@ export async function getVentas() {
     localStorage.removeItem("rol");
   }
 
+export async function obtenerAtencionById(atencionId) {
+  const res = await fetch(`${API_URL2}/atenciones/by_id/${atencionId}`);
+  if (!res.ok) throw new Error("Atención no encontrada");
+  return await res.json();
+}
+
+
+// --- Fisioterapeutas ---
+export async function listarFisioterapeutas() {
+  const res = await fetch(`${API_URL2}/fisioterapeutas`);
+  return await res.json();
+}
+
+export async function agregarFisioterapeuta(nombre) {
+  const res = await fetch(`${API_URL2}/fisioterapeutas`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nombre }),
+  });
+  if (!res.ok) throw new Error("No se pudo agregar fisioterapeuta");
+  return await res.json();
+}
+
+export async function eliminarFisioterapeuta(id) {
+  const res = await fetch(`${API_URL2}/fisioterapeutas/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("No se pudo eliminar fisioterapeuta");
+  return await res.json();
+}

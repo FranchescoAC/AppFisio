@@ -1,31 +1,37 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime
 
+# Subdocumento Cita
 class SignosVitales(BaseModel):
-    tension_arterial: str
-    temperatura: str
-    frecuencia_cardiaca: int
-    frecuencia_respiratoria: int
-    peso: float
-    talla: float
+    talla: Optional[str] = None
+    peso: Optional[str] = None
+    frecuencia_respiratoria: Optional[str] = None
+    frecuencia_cardiaca: Optional[str] = None
+    temperatura: Optional[str] = None
+    tension_arterial: Optional[str] = None
 
-class Tratamiento(BaseModel):
-    fase_inicial: str
-    fase_intermedia: Optional[str] = None
-    fase_final: Optional[str] = None
+class Cita(BaseModel):
+    fecha: Optional[str] = None
+    texto: Optional[str] = None
+    material: Optional[str] = None
+    costo_materiales: Optional[str] = None
+    precio_cita: Optional[str] = None
+    signos_vitales: Optional[SignosVitales] = SignosVitales()
+    quien_atiende: Optional[str] = None
 
+# Documento principal: Atencion
 class Atencion(BaseModel):
     atencion_id: Optional[str] = None
     paciente_id: str
     fecha: str
-    quien_atiende: str
     motivo_consulta: Optional[str] = None
-    antecedentes: Optional[list] = []
-    signos_vitales: Optional[dict] = {}
-    tratamiento: Tratamiento
+    antecedentes: Optional[List[str]] = []
     notas: Optional[str] = None
+    citas: Optional[List[Cita]] = []   # 👈 Array de citas embebidas
 
-# ✅ Modelo para actualizaciones parciales desde ListadoAtenciones
 class AtencionUpdate(BaseModel):
-    tratamiento: Optional[Tratamiento] = None
     notas: Optional[str] = None
+    antecedentes: Optional[List[str]] = None
+    motivo_consulta: Optional[str] = None
+    citas: Optional[List[Cita]] = None   # 👈 también permitir actualizar citas

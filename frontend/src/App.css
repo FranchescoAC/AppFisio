@@ -375,6 +375,31 @@ tbody tr:nth-child(even) {
   background: #c0392b;
 }
 
+/* === BOTONES ANTECEDENTES === */
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: #b3e9fb;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.chip:hover {
+  background: #ddd;
+}
+
+.chip-selected {
+  background: #20bfa9;
+  color: white;
+  font-weight: bold;
+}
+
 
 /* === BOTONES INVENTARIO === */
 .btn-abrir {

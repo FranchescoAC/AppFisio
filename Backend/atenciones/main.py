@@ -10,6 +10,7 @@ from bson import ObjectId
 client = MongoClient("mongodb://localhost:27017/")
 db = client["clinica_fisio"]
 pacientes_collection = db["pacientes"]
+fisioterapeutas_collection = db["fisioterapeutas"]
 
 app = FastAPI(title="Atenciones Service")
 
@@ -54,21 +55,25 @@ def listar_atenciones(paciente_id: str):
 # 🔎 Buscar atenciones por nombre o id de paciente
 @app.get("/atenciones/buscar")
 def buscar_atenciones(query: str = Query(..., description="Nombre o ID del paciente")):
-    paciente = pacientes_collection.find_one({
+    # Buscar todos los pacientes que coincidan parcialmente con el query
+    pacientes = list(pacientes_collection.find({
         "$or": [
-            {"paciente_id": query},
+            {"paciente_id": {"$regex": query, "$options": "i"}},
             {"nombres_completos": {"$regex": query, "$options": "i"}}
         ]
-    })
-    if not paciente:
+    }))
+    
+    if not pacientes:
         return []
 
-    paciente_id = paciente["paciente_id"]
+    # Obtener todas las atenciones de los pacientes encontrados
+    paciente_ids = [p["paciente_id"] for p in pacientes]
     atenciones = []
-    for a in atenciones_collection.find({"paciente_id": paciente_id}):
+    for a in atenciones_collection.find({"paciente_id": {"$in": paciente_ids}}):
         a["_id"] = str(a["_id"])
         atenciones.append(a)
     return atenciones
+
 
 # ✅ Actualizar por _id de Mongo (lo que manda tu frontend)
 @app.put("/atenciones/{atencion_id}")
@@ -94,3 +99,33 @@ def update_atencion(atencion_id: str, datos_actualizados: dict = Body(...)):
         raise HTTPException(status_code=404, detail="Atención no encontrada")
 
     return {"message": "Atención actualizada correctamente"}
+
+@app.get("/atenciones/by_id/{id}")
+def obtener_atencion(id: str):
+    atencion = atenciones_collection.find_one({"_id": ObjectId(id)})
+    if not atencion:
+        raise HTTPException(status_code=404, detail="Atención no encontrada")
+    atencion["_id"] = str(atencion["_id"])
+    return atencion
+
+# Listar fisioterapeutas
+@app.get("/fisioterapeutas")
+def listar_fisioterapeutas():
+    fisios = list(fisioterapeutas_collection.find())
+    return [{"nombre": f["nombre"], "id": str(f["_id"])} for f in fisios]
+
+# Agregar fisioterapeuta
+@app.post("/fisioterapeutas")
+def agregar_fisioterapeuta(nombre: str = Body(..., embed=True)):
+    if fisioterapeutas_collection.find_one({"nombre": nombre}):
+        raise HTTPException(status_code=400, detail="Fisioterapeuta ya existe")
+    result = fisioterapeutas_collection.insert_one({"nombre": nombre})
+    return {"message": "Fisioterapeuta agregado", "id": str(result.inserted_id)}
+
+# Eliminar fisioterapeuta
+@app.delete("/fisioterapeutas/{id}")
+def eliminar_fisioterapeuta(id: str):
+    result = fisioterapeutas_collection.delete_one({"_id": ObjectId(id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Fisioterapeuta no encontrado")
+    return {"message": "Fisioterapeuta eliminado"}
