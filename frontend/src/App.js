@@ -3,16 +3,14 @@ import RegistroPaciente from "./pages/RegistroPaciente";
 import ListadoPacientes from "./pages/ListadoPacientes";
 import RegistroAtencion from "./pages/RegistroAtencion";
 import ListadoAtenciones from "./pages/ListadoAtenciones";
-import RegistroInventario from "./pages/RegistroInventario";
-import ListadoInventario from "./pages/ListadoInventario";
 import AnalisisVentas from "./pages/AnalisisVentas";
 import CitaDetalle from "./pages/CitaDetalle";
+import LibroDiario from "./pages/LibroDiario";
 import Home from "./pages/Home";
-import "./App.css";
-import { FaHome, FaUserPlus, FaClipboardList, FaFileInvoice, FaChartLine, FaSignInAlt, FaSignOutAlt } from "react-icons/fa";
-import logo from "./img/Logo1.png";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import { FaHome, FaUserPlus, FaClipboardList, FaFileInvoice, FaChartLine, FaSignInAlt, FaSignOutAlt, FaFileAlt } from "react-icons/fa";
+import logo from "./img/Logo1.png";
 import { getUserRole, logoutUsuario } from "./services/api";
 import { useState, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
@@ -38,29 +36,54 @@ function App() {
         </Link>
 
         <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
-          <Link to="/registro-paciente" title="Registrar Paciente">
-            <FaUserPlus size={50} color="#F0F0F0" />
-          </Link>
-
-          {(rol === "fisioterapeuta" || rol === "admin") && (
+          {/* Rol Paciente */}
+          {rol === "paciente" && (
             <>
-              <Link to="/listado-atenciones" title="Listado Atenciones">
-                <FaFileInvoice size={50} color="#9b59b6" />
+              <Link to="/registro-paciente" title="Registrar Paciente">
+                <FaUserPlus size={50} color="#F0F0F0" />
+              </Link>
+              <Link to="/registro-atencion" title="Registrar Atención">
+                <FaFileInvoice size={50} color="#e74c3c" />
               </Link>
               <Link to="/listado-pacientes" title="Listado Pacientes">
                 <FaClipboardList size={50} color="#e67e22" />
               </Link>
-              <Link to="/registro-atencion" title="Registrar Atención">
-                <FaUserPlus size={50} color="#e74c3c" />
-              </Link>
-              <Link to="/registro-inventario" title="Registrar Inventario">
-                <FaClipboardList size={50} color="#f1c40f" />
+              <Link to="/libro-diario" title="Libro Diario">
+                <FaFileAlt size={50} color="#9b59b6" />
               </Link>
             </>
           )}
 
+          {/* Rol Fisioterapeuta */}
+          {rol === "fisioterapeuta" && (
+            <>
+              <Link to="/libro-diario" title="Libro Diario">
+                <FaFileAlt size={50} color="#9b59b6" />
+              </Link>
+              <Link to="/listado-atenciones" title="Historial Atenciones">
+                <FaFileInvoice size={50} color="#e74c3c" />
+              </Link>
+            </>
+          )}
+
+          {/* Rol Admin */}
           {rol === "admin" && (
             <>
+              <Link to="/registro-paciente" title="Registrar Paciente">
+                <FaUserPlus size={50} color="#F0F0F0" />
+              </Link>
+              <Link to="/registro-atencion" title="Registrar Atención">
+                <FaFileInvoice size={50} color="#e74c3c" />
+              </Link>
+              <Link to="/listado-pacientes" title="Listado Pacientes">
+                <FaClipboardList size={50} color="#e67e22" />
+              </Link>
+              <Link to="/listado-atenciones" title="Historial Atenciones">
+                <FaFileInvoice size={50} color="#e74c3c" />
+              </Link>
+              <Link to="/libro-diario" title="Libro Diario">
+                <FaFileAlt size={50} color="#9b59b6" />
+              </Link>
               <Link to="/analisis-ventas" title="Análisis Ventas">
                 <FaChartLine size={50} color="#2ecc71" />
               </Link>
@@ -86,27 +109,41 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/Home" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login setRol={setRol} />} />
         {rol === "admin" && <Route path="/register" element={<Register />} />}
         <Route path="/registro-paciente" element={<RegistroPaciente />} />
-        <Route path="/listado-inventario" element={<ListadoInventario />} />
 
-        {(rol === "fisioterapeuta" || rol === "admin") && (
+        {/* Paciente */}
+        {rol === "paciente" && (
           <>
-            <Route path="/listado-atenciones" element={<ListadoAtenciones />} />
-            <Route path="/listado-pacientes" element={<ListadoPacientes />} />
             <Route path="/registro-atencion" element={<RegistroAtencion />} />
-            <Route path="/registro-inventario" element={<RegistroInventario />} />
+            <Route path="/listado-pacientes" element={<ListadoPacientes />} />
+            <Route path="/libro-diario" element={<LibroDiario />} />
           </>
         )}
 
-        {/* ⚡ RUTA DE CITADETALLE SIEMPRE DISPONIBLE PARA PRUEBAS ⚡ */}
-        <Route path="/cita/:atencionId/:citaIndex" element={<CitaDetalle />} />
-
-        {rol === "admin" && (
-          <Route path="/analisis-ventas" element={<AnalisisVentas />} />
+        {/* Fisioterapeuta */}
+        {rol === "fisioterapeuta" && (
+          <>
+            <Route path="/listado-atenciones" element={<ListadoAtenciones />} />
+            <Route path="/libro-diario" element={<LibroDiario />} />
+          </>
         )}
+
+        {/* Admin */}
+        {rol === "admin" && (
+          <>
+            <Route path="/registro-atencion" element={<RegistroAtencion />} />
+            <Route path="/listado-pacientes" element={<ListadoPacientes />} />
+             <Route path="/listado-atenciones" element={<ListadoAtenciones />} />
+            <Route path="/libro-diario" element={<LibroDiario />} />
+            <Route path="/analisis-ventas" element={<AnalisisVentas />} />
+          </>
+        )}
+
+        {/* RUTA DE CITADETALLE SIEMPRE DISPONIBLE */}
+        <Route path="/cita/:atencionId/:citaIndex" element={<CitaDetalle />} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

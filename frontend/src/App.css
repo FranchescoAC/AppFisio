@@ -512,3 +512,124 @@ tbody tr:nth-child(even) {
 .form-paciente button:hover {
   background: #00408a;
 }
+
+/* === DETALLE PACIENTE LIBRO DIARIO === */
+.detalle-paciente {
+  max-width: 700px;
+  margin: 30px auto;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.1);
+  padding: 25px 30px;
+  border-top: 6px solid #20BFA9; /* Verde corporativo */
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.detalle-paciente h2 {
+  color: #0057B8; /* Azul corporativo */
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.detalle-paciente h3 {
+  color: #20BFA9; /* Verde corporativo */
+  font-size: 1.2rem;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  border-left: 4px solid #20BFA9;
+  padding-left: 10px;
+  font-weight: 600;
+}
+
+.detalle-paciente p {
+  font-size: 1rem;
+  margin: 6px 0;
+  color: #444;
+  line-height: 1.5;
+}
+
+.detalle-paciente strong {
+  color: #0057B8;
+  font-weight: 600;
+}
+
+.detalle-paciente ul {
+  list-style: none;
+  margin-top: 10px;
+  padding: 0;
+}
+
+.detalle-paciente ul li {
+  background: #E6F7F5;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+}
+
+.detalle-paciente ul li span {
+  color: #20BFA9;
+  font-weight: 600;
+}
+
+/* Animación */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 🔘 Botón para los pacientes en el libro diario */
+.paciente-btn {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: white;
+  font-weight: bold;
+  padding: 10px 15px;
+  margin: 6px 4px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease;
+  display: inline-block;
+}
+
+.paciente-btn:hover {
+  background: linear-gradient(135deg, #2575fc, #6a11cb);
+  transform: scale(1.05);
+}
+
+/* 📋 Tabla fuera del recuadro */
+.tabla-libro {
+  margin-top: 20px;
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tabla-libro table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-libro th {
+  background: #2575fc;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+.tabla-libro td {
+  padding: 8px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.tabla-libro tr:hover {
+  background-color: #f1f5ff;
+}

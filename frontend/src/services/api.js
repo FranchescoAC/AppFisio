@@ -3,6 +3,7 @@
   export const API_URL3 = "http://localhost:8003";
   export const API_URL4 = "http://localhost:8004";
   export const API_AUTH = "http://localhost:8005";
+    export const API_URL6 = "http://localhost:8006";
 
 
 export async function registrarPaciente(data) {
@@ -310,5 +311,27 @@ export async function eliminarFisioterapeuta(id) {
     method: "DELETE",
   });
   if (!res.ok) throw new Error("No se pudo eliminar fisioterapeuta");
+  return await res.json();
+}
+// Obtener registros del libro diario (opcional fecha)
+export async function listarLibroDiario(fecha) {
+  const url = fecha
+    ? `${API_URL6 || "http://localhost:8006"}/librodiario/listar?fecha=${fecha}`
+    : `${API_URL6 || "http://localhost:8006"}/librodiario/listar`;
+  const res = await fetch(url);
+  return await res.json();
+}
+
+// Registrar entrada en libro diario
+export async function registrarLibroDiario(payload) {
+  const res = await fetch(`${API_URL6 || "http://localhost:8006"}/librodiario/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(txt || `HTTP ${res.status}`);
+  }
   return await res.json();
 }
