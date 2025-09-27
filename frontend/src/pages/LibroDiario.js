@@ -1,4 +1,3 @@
-// src/pages/LibroDiario.js
 import { useState, useEffect } from "react";
 import {
   listarPacientes,
@@ -24,13 +23,17 @@ function LibroDiario() {
   const [costoTratamiento, setCostoTratamiento] = useState(null);
   const [efectivo, setEfectivo] = useState("");
   const [transferencia, setTransferencia] = useState("");
+  const [bancos, setBancos] = useState("");
   const [total, setTotal] = useState(0);
   const [formaPago, setFormaPago] = useState("");
 
   const [fecha, setFecha] = useState("");
   const [filtroFecha, setFiltroFecha] = useState("");
+  const [filtroMes, setFiltroMes] = useState("");
+  const [filtroAnio, setFiltroAnio] = useState("");
   const [registros, setRegistros] = useState([]);
   const [totalVentas, setTotalVentas] = useState(0);
+  const [fisioSeleccionado, setFisioSeleccionado] = useState(null);
 
   const [fisioterapeutas, setFisioterapeutas] = useState([]);
 
@@ -103,9 +106,14 @@ function LibroDiario() {
     if (!at) return;
 
     const c = at.citas?.[idxNum];
+    if (!c) return;
     const costo_trat = c?.precio_cita ?? at?.precio_cita ?? 0;
     const costo_mat = c?.costo_materiales ?? c?.costo_material ?? 0;
     const mats = c?.material ?? [];
+    const fisio = fisioterapeutas.find(
+      (f) => String(f._id) === String(c.quien_atiende)
+    );
+    setFisioSeleccionado(fisio ? fisio.nombre : null);
 
     setMaterialesCita(Array.isArray(mats) ? mats : []);
     setCostoMaterial(costo_mat);
@@ -142,74 +150,88 @@ function LibroDiario() {
 
   // --- Guardar registro en Libro Diario ---
   const handleGuardar = async () => {
-  const at = atenciones.find((a) => a.atencion_id === seleccionAtencionId);
-  const c = at?.citas?.[seleccionCitaIndex] ?? {};
-  
-  // Buscar el nombre del fisio
-  const fisio = fisioterapeutas.find(f => f.id === c.quien_atiende);
+    const at = atenciones.find((a) => a.atencion_id === seleccionAtencionId);
+    const c = at?.citas?.[seleccionCitaIndex] ?? {};
 
-  const payload = {
-    fecha: fecha || null,
-    paciente_id: pacienteSeleccionado?.paciente_id ?? null,
-    nombres_completos: pacienteSeleccionado?.nombres_completos ?? null,
-    ci: pacienteSeleccionado?.ci ?? null,
-    telefono: pacienteSeleccionado?.telefono ?? null,
-    email: pacienteSeleccionado?.email ?? null,
-    atencion_id: seleccionAtencionId || null,
-    cita_id: seleccionCitaIndex ?? null,
-    motivo_consulta: at?.motivo_consulta ?? null,
-    costo_tratamiento: c?.precio_cita ?? at?.precio_cita ?? 0,
-    material: c?.material ?? [],
-    costo_material: c?.costo_materiales ?? 0,
-    efectivo: efectivo === "" ? null : Number(efectivo),
-    transferencia: transferencia === "" ? null : Number(transferencia),
-    total: (Number(c?.precio_cita ?? at?.precio_cita) || 0) + (Number(c?.costo_materiales) || 0),
-    forma_pago: formaPago ?? null,
-    fisioterapeuta_id: c?.quien_atiende ?? null,
-    fisioterapeuta_nombre: fisio ? fisio.nombre : null, // ✅ Aquí guardamos el nombre
+    const fisio = fisioterapeutas.find((f) => f.id === c.quien_atiende);
+
+    const payload = {
+      fecha: fecha || null,
+      paciente_id: pacienteSeleccionado?.paciente_id ?? null,
+      nombres_completos: pacienteSeleccionado?.nombres_completos ?? null,
+      ci: pacienteSeleccionado?.ci ?? null,
+      telefono: pacienteSeleccionado?.telefono ?? null,
+      email: pacienteSeleccionado?.email ?? null,
+      atencion_id: seleccionAtencionId || null,
+      cita_id: seleccionCitaIndex ?? null,
+      motivo_consulta: at?.motivo_consulta ?? null,
+      costo_tratamiento: c?.precio_cita ?? at?.precio_cita ?? 0,
+      material: c?.material ?? [],
+      costo_material: c?.costo_materiales ?? 0,
+      efectivo: efectivo === "" ? null : Number(efectivo),
+      transferencia: transferencia === "" ? null : Number(transferencia),
+      bancos: bancos || null,
+      total:
+        (Number(c?.precio_cita ?? at?.precio_cita) || 0) +
+        (Number(c?.costo_materiales) || 0),
+      forma_pago: formaPago ?? null,
+      fisioterapeuta_id: c?.quien_atiende ?? null,
+      fisioterapeuta_nombre: fisio ? fisio.nombre : null,
+    };
+
+    try {
+      const res = await fetch("http://localhost:8006/librodiario/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Error guardando registro");
+      toast.success("Registro guardado en Libro Diario");
+      setPacienteSeleccionado(null);
+      setAtenciones([]);
+      setSeleccionAtencionId("");
+      setSeleccionCitaIndex(null);
+      setMaterialesCita([]);
+      setCostoMaterial(null);
+      setCostoTratamiento(null);
+      setEfectivo("");
+      setTransferencia("");
+      setBancos("");
+      setTotal(0);
+      setFormaPago("");
+      setQueryPaciente("");
+      setFecha("");
+      fetchRegistros();
+    } catch {
+      toast.error("Error guardando registro");
+    }
   };
-
-  try {
-    const res = await fetch("http://localhost:8006/librodiario/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error("Error guardando registro");
-    toast.success("Registro guardado en Libro Diario");
-    // Limpiar campos...
-    setPacienteSeleccionado(null);
-    setAtenciones([]);
-    setSeleccionAtencionId("");
-    setSeleccionCitaIndex(null);
-    setMaterialesCita([]);
-    setCostoMaterial(null);
-    setCostoTratamiento(null);
-    setEfectivo("");
-    setTransferencia("");
-    setTotal(0);
-    setFormaPago("");
-    setQueryPaciente("");
-    setFecha("");
-    fetchRegistros();
-  } catch {
-    toast.error("Error guardando registro");
-  }
-};
-
 
   // --- Traer registros ---
   const fetchRegistros = async () => {
     try {
-      const url = filtroFecha
-        ? `http://localhost:8006/librodiario/listar?fecha=${filtroFecha}`
-        : `http://localhost:8006/librodiario/listar`;
+      let url = null;
+
+      if (filtroFecha) {
+        url = `http://localhost:8006/librodiario/listar?fecha=${filtroFecha}`;
+      } else if (filtroMes && filtroAnio) {
+        url = `http://localhost:8006/librodiario/listar?mes=${filtroMes}&anio=${filtroAnio}`;
+      }
+
+      if (!url) {
+        setRegistros([]);
+        setTotalVentas(0);
+        return;
+      }
+
       const r = await fetch(url);
       const data = await r.json();
       setRegistros(Array.isArray(data) ? data : []);
+
       const totalDia = (Array.isArray(data) ? data : []).reduce(
         (acc, it) =>
-          acc + (Number(it.costo_tratamiento || 0) + Number(it.costo_material || 0)),
+          acc +
+          (Number(it.costo_tratamiento || 0) + Number(it.costo_material || 0)),
         0
       );
       setTotalVentas(totalDia);
@@ -220,14 +242,29 @@ function LibroDiario() {
 
   useEffect(() => {
     fetchRegistros();
-  }, [filtroFecha]);
+  }, [filtroFecha, filtroMes, filtroAnio]);
+
+  const totals = registros.reduce(
+    (acc, r) => {
+      acc.costoTrat += Number(r.costo_tratamiento || 0);
+      acc.costoMat += Number(r.costo_material || 0);
+      acc.efectivo += Number(r.efectivo || 0);
+      acc.transf += Number(r.transferencia || 0);
+      acc.total += Number(r.total || 0);
+      return acc;
+      },
+      { costoTrat: 0, costoMat: 0, efectivo: 0, transf: 0, total: 0 }
+    );
+
+
 
   return (
     <div className="section-container">
       <h2>Libro Diario</h2>
 
+      {/* ---------------------- BUSQUEDA PACIENTE ---------------------- */}
       <div className="card">
-        <label>Buscar paciente (nombre o CI)</label>
+        <h3>Buscar paciente (nombre o CI)</h3>
         <input
           className="input-buscar"
           value={queryPaciente}
@@ -273,7 +310,10 @@ function LibroDiario() {
               <option value="">-- Seleccione --</option>
               {atenciones.map((a) =>
                 (a.citas || []).map((c, i) => (
-                  <option key={`${a.atencion_id}|${i}`} value={`${a.atencion_id}|${i}`}>
+                  <option
+                    key={`${a.atencion_id}|${i}`}
+                    value={`${a.atencion_id}|${i}`}
+                  >
                     {a.atencion_id} - Cita {i + 1} ({c.fecha})
                   </option>
                 ))
@@ -282,10 +322,11 @@ function LibroDiario() {
 
             <h3>Materiales (de la cita)</h3>
             <ul>
-              {materialesCita.length > 0
-                ? materialesCita.map((m, idx) => <li key={idx}>{m}</li>)
-                : <li>No hay materiales en la cita</li>
-              }
+              {materialesCita.length > 0 ? (
+                materialesCita.map((m, idx) => <li key={idx}>{m}</li>)
+              ) : (
+                <li>No hay materiales en la cita</li>
+              )}
             </ul>
 
             <h3>Costos y Pagos</h3>
@@ -317,8 +358,17 @@ function LibroDiario() {
               onChange={(e) => handleTransferenciaChange(e.target.value)}
             />
 
+            <label>Bancos</label>
+            <input
+            type="text"
+            value={bancos}
+            onChange={(e) =>
+              setBancos(e.target.value)}
+            />
+
             <p>
-              <strong>Total:</strong> {(Number(costoTratamiento) || 0) + (Number(costoMaterial) || 0)}
+              <strong>Total:</strong>{" "}
+              {(Number(costoTratamiento) || 0) + (Number(costoMaterial) || 0)}
               <br />
               <strong>Forma de pago:</strong> {formaPago}
             </p>
@@ -341,56 +391,118 @@ function LibroDiario() {
 
       <hr />
 
-      <div>
+      {/* ---------------------- TABLA REGISTROS ---------------------- */}
+      <div className="tabla-libro">
         <h3>Registros Libro Diario</h3>
-        <label>Filtrar por fecha</label>
+
+        <label>Filtrar por fecha (día)</label>
         <input
           type="date"
           value={filtroFecha}
-          onChange={(e) => setFiltroFecha(e.target.value)}
+          onChange={(e) => {
+            setFiltroFecha(e.target.value);
+            setFiltroMes("");
+            setFiltroAnio("");
+          }}
         />
+
+        <label>Filtrar por mes</label>
+        <select
+          value={filtroMes}
+          onChange={(e) => {
+            setFiltroMes(e.target.value);
+            setFiltroFecha("");
+          }}
+        >
+          <option value="">--Mes--</option>
+          <option value="1">Enero</option>
+          <option value="2">Febrero</option>
+          <option value="3">Marzo</option>
+          <option value="4">Abril</option>
+          <option value="5">Mayo</option>
+          <option value="6">Junio</option>
+          <option value="7">Julio</option>
+          <option value="8">Agosto</option>
+          <option value="9">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
+
+        <label>Año</label>
+        <input
+          type="number"
+          placeholder="YYYY"
+          value={filtroAnio}
+          onChange={(e) => {
+            setFiltroAnio(e.target.value);
+            setFiltroFecha("");
+          }}
+        />
+
         <p>Total ventas: ${totalVentas}</p>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Nombre</th>
-              <th>CI</th>
-              <th>Teléfono</th>
-              <th>Email</th>
-              <th>Motivo</th>
-              <th>Costo Trat.</th>
-              <th>Material</th>
-              <th>Costo Mat.</th>
-              <th>Efectivo</th>
-              <th>Transfer.</th>
-              <th>Total</th>
-              <th>Forma</th>
-              <th>Fisio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {registros.map((r) => (
-              <tr key={r._id}>
-                <td>{r.fecha}</td>
-                <td>{r.nombres_completos}</td>
-                <td>{r.ci}</td>
-                <td>{r.telefono}</td>
-                <td>{r.email}</td>
-                <td>{r.motivo_consulta}</td>
-                <td>{r.costo_tratamiento ?? "-"}</td>
-                <td>{Array.isArray(r.material) ? r.material.join(", ") : r.material}</td>
-                <td>{r.costo_material ?? "-"}</td>
-                <td>{r.efectivo ?? "-"}</td>
-                <td>{r.transferencia ?? "-"}</td>
-                <td>{r.total ?? "-"}</td>
-                <td>{r.forma_pago ?? "-"}</td>
-                <td>{r.fisioterapeuta_nombre ?? "-"}</td>
+        <div style={{ overflowX: "auto" }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Nombre</th>
+                <th>CI</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Motivo</th>
+                <th>Costo Trat.</th>
+                <th>Material</th>
+                <th>Costo Mat.</th>
+                <th>Efectivo</th>
+                <th>Transfer.</th>
+                <th>Bancos</th>
+                <th>Total</th>
+                <th>Forma</th>
+                <th>Fisio</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {registros.map((r) => (
+                <tr key={r._id}>
+                  <td>{r.fecha}</td>
+                  <td>{r.nombres_completos}</td>
+                  <td>{r.ci}</td>
+                  <td>{r.telefono}</td>
+                  <td>{r.email}</td>
+                  <td>{r.motivo_consulta}</td>
+                  <td>{r.costo_tratamiento ?? "-"}</td>
+                  <td>
+                    {Array.isArray(r.material)
+                      ? r.material.join(", ")
+                      : r.material}
+                  </td>
+                  <td>{r.costo_material ?? "-"}</td>
+                  <td>{r.efectivo ?? "-"}</td>
+                  <td>{r.transferencia ?? "-"}</td>
+                  <td>{r.bancos ?? "-"}</td>
+                  <td>{r.total ?? "-"}</td>
+                  <td>{r.forma_pago ?? "-"}</td>
+                  <td>{r.fisioterapeuta_nombre ?? "-"}</td>
+                </tr>
+              ))}
+              {/* 🔹 Fila de totales */}
+              {registros.length > 0 && (
+                <tr style={{ fontWeight: "bold", backgroundColor: "#f0f0f0" }}>
+                <td colSpan={6}>Totales</td>
+                 <td>{totals.costoTrat}</td> 
+                 <td>-</td> 
+                 <td>{totals.costoMat}</td> 
+                 <td>{totals.efectivo}</td> 
+                 <td>{totals.transf}</td> 
+                 <td>-</td> 
+                 <td>{totals.total}</td> 
+                 <td colSpan={2}>-</td> 
+                 </tr> )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <ToastContainer position="top-right" />

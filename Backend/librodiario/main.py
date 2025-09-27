@@ -9,6 +9,7 @@ from atenciones.database import atenciones_collection
 from atenciones.main import fisioterapeutas_collection
 from pydantic import BaseModel
 from typing import List
+from datetime import datetime
 
 # --- MongoDB ---
 client = MongoClient("mongodb://localhost:27017/")
@@ -45,17 +46,32 @@ async def registrar_libro(registro: RegistroLibroDiario):
 
 # --- Listar registros ---
 @app.get("/librodiario/listar")
-async def listar_libro(fecha: Optional[str] = Query(None, description="YYYY-MM-DD")):
+async def listar_libro(
+    fecha: Optional[str] = Query(None, description="YYYY-MM-DD"),
+    mes: Optional[int] = Query(None, ge=1, le=12, description="Mes en formato numérico"),
+    anio: Optional[int] = Query(None, description="Año en formato YYYY")
+):
     filtro = {}
+
+    # Filtrar por fecha exacta
     if fecha:
         filtro["fecha"] = fecha
+
+    # Filtrar por mes y año
+    elif mes and anio:
+        # Rango de inicio y fin del mes
+        inicio = f"{anio}-{str(mes).zfill(2)}-01"
+        if mes == 12:
+            fin = f"{anio+1}-01-01"
+        else:
+            fin = f"{anio}-{str(mes+1).zfill(2)}-01"
+
+        filtro["fecha"] = {"$gte": inicio, "$lt": fin}
 
     resultados = list(libro_collection.find(filtro).sort("_id", -1).limit(1000))
 
     for r in resultados:
-        # Convertir _id a string
         r["_id"] = str(r["_id"])
-        # Usar el nombre del fisioterapeuta ya guardado
         r["fisioterapeuta_nombre"] = r.get("fisioterapeuta_nombre", "-")
 
     return resultados

@@ -17,6 +17,7 @@ class RegistroLibroDiario(BaseModel):
     costo_material: Optional[float] = None
     efectivo: Optional[float] = None
     transferencia: Optional[float] = None
+    bancos: Optional[str] = None  # ✅ Nuevo campo
     total: Optional[float] = None
     forma_pago: Optional[str] = None
     fisioterapeuta_id: Optional[str] = None
