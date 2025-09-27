@@ -4,6 +4,7 @@ import {
   listarPacientes,
   buscarPacientes,
   listarAtenciones,
+  listarFisioterapeutas,
 } from "../services/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,7 +32,23 @@ function LibroDiario() {
   const [registros, setRegistros] = useState([]);
   const [totalVentas, setTotalVentas] = useState(0);
 
-  // Buscar pacientes
+  const [fisioterapeutas, setFisioterapeutas] = useState([]);
+
+  // --- Traer fisioterapeutas ---
+  useEffect(() => {
+    const fetchFisio = async () => {
+      try {
+        const fisios = await listarFisioterapeutas();
+        setFisioterapeutas(fisios);
+      } catch (error) {
+        console.error(error);
+        toast.error("Error al cargar fisioterapeutas");
+      }
+    };
+    fetchFisio();
+  }, []);
+
+  // --- Buscar pacientes ---
   useEffect(() => {
     const fetch = async () => {
       if (!queryPaciente.trim()) {
@@ -49,7 +66,7 @@ function LibroDiario() {
     return () => clearTimeout(t);
   }, [queryPaciente]);
 
-  // Seleccionar paciente
+  // --- Seleccionar paciente ---
   const handleSeleccionPaciente = async (p) => {
     setPacienteSeleccionado(p);
     setQueryPaciente(p.nombres_completos);
@@ -70,7 +87,7 @@ function LibroDiario() {
     }
   };
 
-  // Seleccionar atención/cita
+  // --- Seleccionar atención/cita ---
   const handleSeleccionAtencionYCita = (value) => {
     if (!value) {
       setSeleccionAtencionId("");
@@ -103,7 +120,7 @@ function LibroDiario() {
     actualizarFormaPago(ef, tr);
   };
 
-  // Actualizar forma de pago
+  // --- Actualizar forma de pago ---
   const actualizarFormaPago = (ef, tr) => {
     const e = Number(ef || 0);
     const t = Number(tr || 0);
@@ -123,56 +140,65 @@ function LibroDiario() {
     actualizarFormaPago(efectivo, v);
   };
 
+  // --- Guardar registro en Libro Diario ---
   const handleGuardar = async () => {
-    const at = atenciones.find((a) => a.atencion_id === seleccionAtencionId);
-    const payload = {
-      fecha: fecha || null,
-      paciente_id: pacienteSeleccionado?.paciente_id ?? null,
-      nombres_completos: pacienteSeleccionado?.nombres_completos ?? null,
-      ci: pacienteSeleccionado?.ci ?? null,
-      telefono: pacienteSeleccionado?.telefono ?? null,
-      email: pacienteSeleccionado?.email ?? null,
-      atencion_id: seleccionAtencionId || null,
-      cita_id: seleccionCitaIndex ?? null,
-      motivo_consulta: at?.motivo_consulta ?? null,
-      costo_tratamiento: costoTratamiento ?? 0,
-      material: materialesCita ?? [],
-      costo_material: costoMaterial ?? 0,
-      efectivo: efectivo === "" ? null : Number(efectivo),
-      transferencia: transferencia === "" ? null : Number(transferencia),
-      total: (Number(costoTratamiento) || 0) + (Number(costoMaterial) || 0),
-      forma_pago: formaPago ?? null,
-      fisioterapeuta: at?.fisioterapeuta ?? null,
-    };
+  const at = atenciones.find((a) => a.atencion_id === seleccionAtencionId);
+  const c = at?.citas?.[seleccionCitaIndex] ?? {};
+  
+  // Buscar el nombre del fisio
+  const fisio = fisioterapeutas.find(f => f.id === c.quien_atiende);
 
-    try {
-      const res = await fetch("http://localhost:8006/librodiario/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Error guardando registro");
-      toast.success("Registro guardado en Libro Diario");
-      // Limpiar campos
-      setPacienteSeleccionado(null);
-      setAtenciones([]);
-      setSeleccionAtencionId("");
-      setSeleccionCitaIndex(null);
-      setMaterialesCita([]);
-      setCostoMaterial(null);
-      setCostoTratamiento(null);
-      setEfectivo("");
-      setTransferencia("");
-      setTotal(0);
-      setFormaPago("");
-      setQueryPaciente("");
-      setFecha("");
-      fetchRegistros();
-    } catch {
-      toast.error("Error guardando registro");
-    }
+  const payload = {
+    fecha: fecha || null,
+    paciente_id: pacienteSeleccionado?.paciente_id ?? null,
+    nombres_completos: pacienteSeleccionado?.nombres_completos ?? null,
+    ci: pacienteSeleccionado?.ci ?? null,
+    telefono: pacienteSeleccionado?.telefono ?? null,
+    email: pacienteSeleccionado?.email ?? null,
+    atencion_id: seleccionAtencionId || null,
+    cita_id: seleccionCitaIndex ?? null,
+    motivo_consulta: at?.motivo_consulta ?? null,
+    costo_tratamiento: c?.precio_cita ?? at?.precio_cita ?? 0,
+    material: c?.material ?? [],
+    costo_material: c?.costo_materiales ?? 0,
+    efectivo: efectivo === "" ? null : Number(efectivo),
+    transferencia: transferencia === "" ? null : Number(transferencia),
+    total: (Number(c?.precio_cita ?? at?.precio_cita) || 0) + (Number(c?.costo_materiales) || 0),
+    forma_pago: formaPago ?? null,
+    fisioterapeuta_id: c?.quien_atiende ?? null,
+    fisioterapeuta_nombre: fisio ? fisio.nombre : null, // ✅ Aquí guardamos el nombre
   };
 
+  try {
+    const res = await fetch("http://localhost:8006/librodiario/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("Error guardando registro");
+    toast.success("Registro guardado en Libro Diario");
+    // Limpiar campos...
+    setPacienteSeleccionado(null);
+    setAtenciones([]);
+    setSeleccionAtencionId("");
+    setSeleccionCitaIndex(null);
+    setMaterialesCita([]);
+    setCostoMaterial(null);
+    setCostoTratamiento(null);
+    setEfectivo("");
+    setTransferencia("");
+    setTotal(0);
+    setFormaPago("");
+    setQueryPaciente("");
+    setFecha("");
+    fetchRegistros();
+  } catch {
+    toast.error("Error guardando registro");
+  }
+};
+
+
+  // --- Traer registros ---
   const fetchRegistros = async () => {
     try {
       const url = filtroFecha
@@ -360,7 +386,7 @@ function LibroDiario() {
                 <td>{r.transferencia ?? "-"}</td>
                 <td>{r.total ?? "-"}</td>
                 <td>{r.forma_pago ?? "-"}</td>
-                <td>{r.fisioterapeuta ?? "-"}</td>
+                <td>{r.fisioterapeuta_nombre ?? "-"}</td>
               </tr>
             ))}
           </tbody>

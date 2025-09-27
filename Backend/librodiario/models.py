@@ -13,11 +13,11 @@ class RegistroLibroDiario(BaseModel):
     cita_id: Optional[int] = None
     motivo_consulta: Optional[str] = None
     costo_tratamiento: Optional[float] = None
-    # material será lista de strings (nombres) o lista de objetos simples si prefieres
     material: Optional[List[str]] = []
     costo_material: Optional[float] = None
     efectivo: Optional[float] = None
     transferencia: Optional[float] = None
     total: Optional[float] = None
     forma_pago: Optional[str] = None
-    fisioterapeuta: Optional[str] = None
+    fisioterapeuta_id: Optional[str] = None
+    fisioterapeuta_nombre: Optional[str] = None  # ✅ Nuevo campo
