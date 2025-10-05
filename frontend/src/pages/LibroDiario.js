@@ -4,7 +4,11 @@ import {
   buscarPacientes,
   listarAtenciones,
   listarFisioterapeutas,
+  borrarRegistro,
+  actualizarRegistro,
+  registrarRegistro
 } from "../services/api";
+
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../App.css";
@@ -34,8 +38,47 @@ function LibroDiario() {
   const [registros, setRegistros] = useState([]);
   const [totalVentas, setTotalVentas] = useState(0);
   const [fisioSeleccionado, setFisioSeleccionado] = useState(null);
-
+  const [editandoId, setEditandoId] = useState(null);
   const [fisioterapeutas, setFisioterapeutas] = useState([]);
+  const [registroSeleccionado, setRegistroSeleccionado] = useState(null);
+
+  // --- Obtener registros del Libro Diario ---
+  const obtenerRegistros = async () => {
+    try {
+      let url = null;
+
+      if (filtroFecha) {
+        url = `http://localhost:8006/librodiario/listar?fecha=${filtroFecha}`;
+      } else if (filtroMes && filtroAnio) {
+        url = `http://localhost:8006/librodiario/listar?mes=${filtroMes}&anio=${filtroAnio}`;
+      }
+
+      if (!url) {
+        setRegistros([]);
+        setTotalVentas(0);
+        return;
+      }
+
+      const r = await fetch(url);
+      const data = await r.json();
+      setRegistros(Array.isArray(data) ? data : []);
+
+      const totalDia = (Array.isArray(data) ? data : []).reduce(
+        (acc, it) =>
+          acc +
+          (Number(it.costo_tratamiento || 0) + Number(it.costo_material || 0)),
+        0
+      );
+      setTotalVentas(totalDia);
+    } catch {
+      toast.error("Error cargando registros");
+    }
+  };
+
+  // --- Traer registros cuando cambien los filtros ---
+  useEffect(() => {
+    obtenerRegistros();
+  }, [filtroFecha, filtroMes, filtroAnio]);
 
   // --- Traer fisioterapeutas ---
   useEffect(() => {
@@ -72,7 +115,7 @@ function LibroDiario() {
   // --- Seleccionar paciente ---
   const handleSeleccionPaciente = async (p) => {
     setPacienteSeleccionado(p);
-    setQueryPaciente(p.nombres_completos);
+    setQueryPaciente(p.nombres_completos ?? "");
     try {
       const data = await listarAtenciones(p.paciente_id);
       setAtenciones(Array.isArray(data) ? data : []);
@@ -128,7 +171,6 @@ function LibroDiario() {
     actualizarFormaPago(ef, tr);
   };
 
-  // --- Actualizar forma de pago ---
   const actualizarFormaPago = (ef, tr) => {
     const e = Number(ef || 0);
     const t = Number(tr || 0);
@@ -148,101 +190,134 @@ function LibroDiario() {
     actualizarFormaPago(efectivo, v);
   };
 
-  // --- Guardar registro en Libro Diario ---
+  // --- Guardar o actualizar registro ---
   const handleGuardar = async () => {
-    const at = atenciones.find((a) => a.atencion_id === seleccionAtencionId);
-    const c = at?.citas?.[seleccionCitaIndex] ?? {};
-
-    const fisio = fisioterapeutas.find((f) => f.id === c.quien_atiende);
-
-    const payload = {
-      fecha: fecha || null,
-      paciente_id: pacienteSeleccionado?.paciente_id ?? null,
-      nombres_completos: pacienteSeleccionado?.nombres_completos ?? null,
-      ci: pacienteSeleccionado?.ci ?? null,
-      telefono: pacienteSeleccionado?.telefono ?? null,
-      email: pacienteSeleccionado?.email ?? null,
-      atencion_id: seleccionAtencionId || null,
-      cita_id: seleccionCitaIndex ?? null,
-      motivo_consulta: at?.motivo_consulta ?? null,
-      costo_tratamiento: c?.precio_cita ?? at?.precio_cita ?? 0,
-      material: c?.material ?? [],
-      costo_material: c?.costo_materiales ?? 0,
-      efectivo: efectivo === "" ? null : Number(efectivo),
-      transferencia: transferencia === "" ? null : Number(transferencia),
-      bancos: bancos || null,
-      total:
-        (Number(c?.precio_cita ?? at?.precio_cita) || 0) +
-        (Number(c?.costo_materiales) || 0),
-      forma_pago: formaPago ?? null,
-      fisioterapeuta_id: c?.quien_atiende ?? null,
-      fisioterapeuta_nombre: fisio ? fisio.nombre : null,
-    };
-
     try {
-      const res = await fetch("http://localhost:8006/librodiario/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Error guardando registro");
-      toast.success("Registro guardado en Libro Diario");
-      setPacienteSeleccionado(null);
-      setAtenciones([]);
-      setSeleccionAtencionId("");
-      setSeleccionCitaIndex(null);
-      setMaterialesCita([]);
-      setCostoMaterial(null);
-      setCostoTratamiento(null);
-      setEfectivo("");
-      setTransferencia("");
-      setBancos("");
-      setTotal(0);
-      setFormaPago("");
-      setQueryPaciente("");
-      setFecha("");
-      fetchRegistros();
-    } catch {
-      toast.error("Error guardando registro");
-    }
-  };
+      let at, c, fisio;
 
-  // --- Traer registros ---
-  const fetchRegistros = async () => {
-    try {
-      let url = null;
-
-      if (filtroFecha) {
-        url = `http://localhost:8006/librodiario/listar?fecha=${filtroFecha}`;
-      } else if (filtroMes && filtroAnio) {
-        url = `http://localhost:8006/librodiario/listar?mes=${filtroMes}&anio=${filtroAnio}`;
+      if (seleccionAtencionId !== "" && seleccionCitaIndex !== null) {
+        at = atenciones.find((a) => a.atencion_id === seleccionAtencionId);
+        c = at?.citas?.[seleccionCitaIndex] ?? {};
+        fisio = fisioterapeutas.find(
+          (f) => String(f._id) === String(c.quien_atiende)
+        );
+      } else {
+        c = {};
+        fisio = fisioterapeutas.find((f) => f.nombre === fisioSeleccionado);
       }
 
-      if (!url) {
-        setRegistros([]);
-        setTotalVentas(0);
-        return;
+      const payload = {
+        fecha: fecha || null,
+        paciente_id: pacienteSeleccionado?.paciente_id ?? null,
+        nombres_completos: pacienteSeleccionado?.nombres_completos ?? null,
+        ci: pacienteSeleccionado?.ci ?? null,
+        telefono: pacienteSeleccionado?.telefono ?? null,
+        email: pacienteSeleccionado?.email ?? null,
+        motivo_consulta: at?.motivo_consulta ?? registroSeleccionado?.motivo_consulta ?? null,
+        costo_tratamiento: costoTratamiento ?? 0,
+        material: materialesCita ?? registroSeleccionado?.material ?? [],
+        costo_material: costoMaterial ?? registroSeleccionado?.costo_material ?? 0,
+        efectivo: efectivo === "" ? null : Number(efectivo),
+        transferencia: transferencia === "" ? null : Number(transferencia),
+        bancos: bancos || null,
+        total: (Number(costoTratamiento) || 0) + (Number(costoMaterial) || 0),
+        forma_pago: formaPago ?? null,
+        fisioterapeuta_nombre: fisio?.nombre ?? fisioSeleccionado ?? null,
+      };
+
+      if (registroSeleccionado) {
+        await actualizarRegistro(registroSeleccionado._id, payload);
+      } else {
+        await registrarRegistro(payload);
       }
 
-      const r = await fetch(url);
-      const data = await r.json();
-      setRegistros(Array.isArray(data) ? data : []);
-
-      const totalDia = (Array.isArray(data) ? data : []).reduce(
-        (acc, it) =>
-          acc +
-          (Number(it.costo_tratamiento || 0) + Number(it.costo_material || 0)),
-        0
+      setRegistroSeleccionado(null);
+      setEditandoId(null); // quitar resaltado al guardar
+      await obtenerRegistros();
+      toast.success(
+        registroSeleccionado ? "Registro actualizado correctamente" : "Registro guardado en Libro Diario"
       );
-      setTotalVentas(totalDia);
-    } catch {
-      toast.error("Error cargando registros");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error guardando registro: " + err.message);
     }
   };
 
-  useEffect(() => {
-    fetchRegistros();
-  }, [filtroFecha, filtroMes, filtroAnio]);
+  const handleEliminar = async (id) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este registro?")) return;
+    try {
+      await borrarRegistro(id);
+      toast.success("Registro eliminado correctamente");
+      obtenerRegistros();
+    } catch {
+      toast.error("Error al eliminar registro");
+    }
+  };
+
+  // --- Editar registro ---
+  const handleEditarRegistro = async (registro) => {
+    setRegistroSeleccionado(registro);
+    setEditandoId(registro._id);
+
+    setFecha(registro.fecha || "");
+    setEfectivo(registro.efectivo?.toString() || "");
+    setTransferencia(registro.transferencia?.toString() || "");
+    setBancos(registro.bancos || "");
+    setFormaPago(registro.forma_pago || "");
+    setCostoTratamiento(Number(registro.costo_tratamiento) || 0);
+    setCostoMaterial(Number(registro.costo_material) || 0);
+    setTotal(Number(registro.total) || 0);
+
+    setPacienteSeleccionado({
+      paciente_id: registro.paciente_id,
+      nombres_completos: registro.nombres_completos,
+      ci: registro.ci,
+      telefono: registro.telefono,
+      email: registro.email,
+    });
+
+    try {
+      const data = await listarAtenciones(registro.paciente_id);
+      const atList = Array.isArray(data) ? data : [];
+      setAtenciones(atList);
+
+      let encontrada = false;
+      for (let i = 0; i < atList.length; i++) {
+        const a = atList[i];
+        const idx = (a.citas || []).findIndex(
+          (c) =>
+            (c.fecha === registro.fecha || true) &&
+            Number(c.costo_tratamiento || 0) === Number(registro.costo_tratamiento || 0)
+        );
+        if (idx !== -1) {
+          setSeleccionAtencionId(a.atencion_id);
+          setSeleccionCitaIndex(idx);
+
+          const c = a.citas[idx];
+          setMaterialesCita(c.material ?? []);
+          setFisioSeleccionado(
+            fisioterapeutas.find((f) => String(f._id) === String(c.quien_atiende))?.nombre ||
+              null
+          );
+          encontrada = true;
+          break;
+        }
+      }
+
+      if (!encontrada) {
+        setSeleccionAtencionId("");
+        setSeleccionCitaIndex(null);
+        setMaterialesCita([]);
+        setFisioSeleccionado(null);
+      }
+    } catch {
+      toast.error("Error cargando atenciones del paciente");
+    }
+
+    // Subir al top y mostrar notificación
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast.info("Se está editando el registro", { autoClose: 2000 });
+  };
 
   const totals = registros.reduce(
     (acc, r) => {
@@ -252,148 +327,158 @@ function LibroDiario() {
       acc.transf += Number(r.transferencia || 0);
       acc.total += Number(r.total || 0);
       return acc;
-      },
-      { costoTrat: 0, costoMat: 0, efectivo: 0, transf: 0, total: 0 }
-    );
-
-
+    },
+    { costoTrat: 0, costoMat: 0, efectivo: 0, transf: 0, total: 0 }
+  );
 
   return (
-    <div className="section-container">
-      <h2>Libro Diario</h2>
+    <>
+      <div className="section-container">
+        <h2>Libro Diario</h2>
 
-      {/* ---------------------- BUSQUEDA PACIENTE ---------------------- */}
-      <div className="card">
-        <h3>Buscar paciente (nombre o CI)</h3>
-        <input
-          className="input-buscar"
-          value={queryPaciente}
-          onChange={(e) => setQueryPaciente(e.target.value)}
-          placeholder="Buscar por nombre o CI"
-        />
-        {pacientes.length > 0 && (
-          <ul className="autocomplete-list card">
-            {pacientes.map((p) => (
-              <li
-                key={p._id ?? p.paciente_id}
-                onClick={() => handleSeleccionPaciente(p)}
-                style={{ cursor: "pointer", padding: "6px 8px" }}
-              >
-                {p.nombres_completos} ({p.ci})
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {pacienteSeleccionado && (
-          <div className="detalle-paciente">
-            <h2>Detalle del Paciente</h2>
-            <p>
-              <strong>Nombre:</strong> {pacienteSeleccionado.nombres_completos}
-              <br />
-              <strong>CI:</strong> {pacienteSeleccionado.ci}
-              <br />
-              <strong>Teléfono:</strong> {pacienteSeleccionado.telefono}
-              <br />
-              <strong>Email:</strong> {pacienteSeleccionado.email}
-            </p>
-
-            <h3>Atención / Cita</h3>
-            <select
-              value={
-                seleccionAtencionId && seleccionCitaIndex !== null
-                  ? `${seleccionAtencionId}|${seleccionCitaIndex}`
-                  : ""
-              }
-              onChange={(e) => handleSeleccionAtencionYCita(e.target.value)}
-            >
-              <option value="">-- Seleccione --</option>
-              {atenciones.map((a) =>
-                (a.citas || []).map((c, i) => (
-                  <option
-                    key={`${a.atencion_id}|${i}`}
-                    value={`${a.atencion_id}|${i}`}
-                  >
-                    {a.atencion_id} - Cita {i + 1} ({c.fecha})
-                  </option>
-                ))
-              )}
-            </select>
-
-            <h3>Materiales (de la cita)</h3>
-            <ul>
-              {materialesCita.length > 0 ? (
-                materialesCita.map((m, idx) => <li key={idx}>{m}</li>)
-              ) : (
-                <li>No hay materiales en la cita</li>
-              )}
+        {/* ---------------------- BUSQUEDA PACIENTE ---------------------- */}
+        <div className="card">
+          <h3>Buscar paciente (nombre o CI)</h3>
+          <input
+            className="input-buscar"
+            value={queryPaciente}
+            onChange={(e) => setQueryPaciente(e.target.value)}
+            placeholder="Buscar por nombre o CI"
+          />
+          {pacientes.length > 0 && (
+            <ul className="autocomplete-list card">
+              {pacientes.map((p) => (
+                <li
+                  key={p._id ?? p.paciente_id}
+                  onClick={() => handleSeleccionPaciente(p)}
+                  style={{ cursor: "pointer", padding: "6px 8px" }}
+                >
+                  {p.nombres_completos ?? ""} ({p.ci ?? ""})
+                </li>
+              ))}
             </ul>
+          )}
 
-            <h3>Costos y Pagos</h3>
-            <label>Costo tratamiento</label>
-            <input
-              type="number"
-              value={costoTratamiento ?? ""}
-              onChange={(e) => setCostoTratamiento(Number(e.target.value))}
-            />
+          {(pacienteSeleccionado || editandoId) && (
+            <div
+              className="detalle-paciente"
+              style={{
+                padding: "15px",
+                border: editandoId ? "2px solid #36f4ceff" : "1px solid #ccc",
+                borderRadius: "8px",
+                boxShadow: editandoId
+                  ? "0 0 15px rgba(54, 244, 206, 0.7)"
+                  : "none",
+                transition: "all 0.3s ease",
+                backgroundColor: "#fff",
+                marginBottom: "20px",
+              }}
+            >
+              <h2>Detalle del Paciente</h2>
+              <p>
+                <strong>Nombre:</strong> {pacienteSeleccionado?.nombres_completos ?? "-"}
+                <br />
+                <strong>CI:</strong> {pacienteSeleccionado?.ci ?? "-"}
+                <br />
+                <strong>Teléfono:</strong> {pacienteSeleccionado?.telefono ?? "-"}
+                <br />
+                <strong>Email:</strong> {pacienteSeleccionado?.email ?? "-"}
+              </p>
 
-            <label>Costo material</label>
-            <input
-              type="number"
-              value={costoMaterial ?? ""}
-              onChange={(e) => setCostoMaterial(Number(e.target.value))}
-            />
+              {/* ---------------------- DETALLE ATENCIONES ---------------------- */}
+              {atenciones.length > 0 && (
+                <div className="detalle-atenciones">
+                  <h3>Atenciones del paciente</h3>
+                  <label>Seleccionar cita:</label>
+                  <select
+                    value={
+                      seleccionAtencionId && seleccionCitaIndex !== null
+                        ? `${seleccionAtencionId}|${seleccionCitaIndex}`
+                        : ""
+                    }
+                    onChange={(e) => handleSeleccionAtencionYCita(e.target.value)}
+                  >
+                    <option value="">-- Seleccione una cita --</option>
+                    {atenciones.map((a) =>
+                      a.citas?.map((cita, idx) => (
+                        <option key={`${a.atencion_id}-${idx}`} value={`${a.atencion_id}|${idx}`}>
+                          {cita.fecha} - {a.motivo_consulta ?? "Sin motivo"}
+                        </option>
+                      ))
+                    )}
+                  </select>
 
-            <label>Efectivo</label>
-            <input
-              type="number"
-              value={efectivo}
-              onChange={(e) => handleEfectivoChange(e.target.value)}
-            />
+                  <div className="materiales-cita">
+                    <h4>Materiales utilizados:</h4>
+                    {materialesCita.length > 0 ? (
+                      <ul>
+                        {materialesCita.map((m, i) => (
+                          <li key={i}>
+                            {m.nombre ?? m} - Cantidad: {m.cantidad ?? "-"} - Precio: {m.precio ?? "-"}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No hay materiales registrados</p>
+                    )}
+                  </div>
 
-            <label>Transferencia</label>
-            <input
-              type="number"
-              value={transferencia}
-              onChange={(e) => handleTransferenciaChange(e.target.value)}
-            />
+                  <div className="costos-cita">
+                    <h4>Costos</h4>
+                    <p>
+                      <strong>Costo del tratamiento:</strong> ${costoTratamiento ?? 0}
+                    </p>
+                    <p>
+                      <strong>Costo de materiales:</strong> ${costoMaterial ?? 0}
+                    </p>
+                    <p>
+                      <strong>Total:</strong> ${total ?? 0}
+                    </p>
+                  </div>
 
-            <label>Bancos</label>
-            <input
-            type="text"
-            value={bancos}
-            onChange={(e) =>
-              setBancos(e.target.value)}
-            />
+                  <div className="formas-pago">
+                    <h4>Forma de pago</h4>
+                    <label>Efectivo:</label>
+                    <input
+                      type="number"
+                      value={efectivo}
+                      onChange={(e) => handleEfectivoChange(e.target.value)}
+                      placeholder="0"
+                    />
+                    <label>Transferencia:</label>
+                    <input
+                      type="number"
+                      value={transferencia}
+                      onChange={(e) => handleTransferenciaChange(e.target.value)}
+                      placeholder="0"
+                    />
+                    <label>Bancos:</label>
+                    <input
+                      type="text"
+                      value={bancos}
+                      onChange={(e) => setBancos(e.target.value)}
+                      placeholder="Nombre del banco"
+                    />
+                    <p>
+                      <strong>Tipo de pago:</strong> {formaPago ?? "-"}
+                    </p>
+                    <label>Fecha del registro</label>
+                    <input
+                      type="date"
+                      value={fecha}
+                      onChange={(e) => setFecha(e.target.value)}
+                    />
+                    <button className="btn-guardar" onClick={handleGuardar}>
+                      💾 Guardar en Libro Diario
+                    </button>
+                  </div>
 
-            <p>
-              <strong>Total:</strong>{" "}
-              {(Number(costoTratamiento) || 0) + (Number(costoMaterial) || 0)}
-              <br />
-              <strong>Forma de pago:</strong> {formaPago}
-            </p>
-
-            <label>Fecha del registro</label>
-            <input
-              type="date"
-              value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
-            />
-
-            <div style={{ marginTop: 8 }}>
-              <button className="btn-guardar" onClick={handleGuardar}>
-                💾 Guardar en Libro Diario
-              </button>
+                </div>
+              )}
             </div>
-          </div>
-        )}
-      </div>
-
-      <hr />
-
-      {/* ---------------------- TABLA REGISTROS ---------------------- */}
-      <div className="tabla-libro">
-        <h3>Registros Libro Diario</h3>
+            
+          )}
+                            <h3>Registros Libro Diario</h3>
 
         <label>Filtrar por fecha (día)</label>
         <input
@@ -442,71 +527,107 @@ function LibroDiario() {
 
         <p>Total ventas: ${totalVentas}</p>
 
-        <div style={{ overflowX: "auto" }}>
-          <table>
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Nombre</th>
-                <th>CI</th>
-                <th>Teléfono</th>
-                <th>Email</th>
-                <th>Motivo</th>
-                <th>Costo Trat.</th>
-                <th>Material</th>
-                <th>Costo Mat.</th>
-                <th>Efectivo</th>
-                <th>Transfer.</th>
-                <th>Bancos</th>
-                <th>Total</th>
-                <th>Forma</th>
-                <th>Fisio</th>
-              </tr>
-            </thead>
-            <tbody>
-              {registros.map((r) => (
-                <tr key={r._id}>
-                  <td>{r.fecha}</td>
-                  <td>{r.nombres_completos}</td>
-                  <td>{r.ci}</td>
-                  <td>{r.telefono}</td>
-                  <td>{r.email}</td>
-                  <td>{r.motivo_consulta}</td>
-                  <td>{r.costo_tratamiento ?? "-"}</td>
-                  <td>
-                    {Array.isArray(r.material)
-                      ? r.material.join(", ")
-                      : r.material}
-                  </td>
-                  <td>{r.costo_material ?? "-"}</td>
-                  <td>{r.efectivo ?? "-"}</td>
-                  <td>{r.transferencia ?? "-"}</td>
-                  <td>{r.bancos ?? "-"}</td>
-                  <td>{r.total ?? "-"}</td>
-                  <td>{r.forma_pago ?? "-"}</td>
-                  <td>{r.fisioterapeuta_nombre ?? "-"}</td>
-                </tr>
-              ))}
-              {/* 🔹 Fila de totales */}
-              {registros.length > 0 && (
-                <tr style={{ fontWeight: "bold", backgroundColor: "#f0f0f0" }}>
-                <td colSpan={6}>Totales</td>
-                 <td>{totals.costoTrat}</td> 
-                 <td>-</td> 
-                 <td>{totals.costoMat}</td> 
-                 <td>{totals.efectivo}</td> 
-                 <td>{totals.transf}</td> 
-                 <td>-</td> 
-                 <td>{totals.total}</td> 
-                 <td colSpan={2}>-</td> 
-                 </tr> )}
-            </tbody>
-          </table>
         </div>
       </div>
 
+      {/* ==================== TABLA INDEPENDIENTE ==================== */}
+      <div className="tabla-libro-diario" style={{ overflowX: "auto", marginTop: "20px" }}>
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Nombre</th>
+              <th>CI</th>
+              <th>Teléfono</th>
+              <th>Email</th>
+              <th>Motivo</th>
+              <th>Costo Trat.</th>
+              <th>Material</th>
+              <th>Costo Mat.</th>
+              <th>Efectivo</th>
+              <th>Transfer.</th>
+              <th>Bancos</th>
+              <th>Total</th>
+              <th>Forma</th>
+              <th>Fisio</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {registros.map((r) => (
+              <tr key={r._id}>
+                <td>{r.fecha ?? "-"}</td>
+                <td>{r.nombres_completos ?? "-"}</td>
+                <td>{r.ci ?? "-"}</td>
+                <td>{r.telefono ?? "-"}</td>
+                <td>{r.email ?? "-"}</td>
+                <td>{r.motivo_consulta ?? "-"}</td>
+                <td>{r.costo_tratamiento ?? "-"}</td>
+<td>
+  {Array.isArray(r.material) && r.material.length > 0
+    ? r.material.map(m => m.nombre).join(", ")
+    : "-"}
+</td>
+
+
+                <td>{r.costo_material ?? "-"}</td>
+                <td>{r.efectivo ?? "-"}</td>
+                <td>{r.transferencia ?? "-"}</td>
+                <td>{r.bancos ?? "-"}</td>
+                <td>{r.total ?? "-"}</td>
+                <td>{r.forma_pago ?? "-"}</td>
+                <td>{r.fisioterapeuta_nombre ?? "-"}</td>
+                <td>
+                  <button
+                    onClick={() => handleEditarRegistro(r)}
+                    style={{
+                      backgroundColor: "#36f4ceff",
+                      color: "white",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                      marginTop: "10px",
+                    }}
+                  >
+                    ✏️ Editar
+                  </button>
+                  <button
+                    onClick={() => handleEliminar(r._id)}
+                    style={{
+                      backgroundColor: "#f44336",
+                      color: "white",
+                      border: "none",
+                      padding: "4px 5px",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                      marginLeft: 4,
+                    }}
+                  >
+                    🗑️ Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {registros.length > 0 && (
+              <tr style={{ fontWeight: "bold", backgroundColor: "#f0f0f0" }}>
+                <td colSpan={6}>Totales</td>
+                <td>{totals.costoTrat}</td>
+                <td>-</td>
+                <td>{totals.costoMat}</td>
+                <td>{totals.efectivo}</td>
+                <td>{totals.transf}</td>
+                <td>-</td>
+                <td>{totals.total}</td>
+                <td colSpan={2}>-</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
       <ToastContainer position="top-right" />
-    </div>
+    </>
   );
 }
 

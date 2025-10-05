@@ -43,12 +43,14 @@ function CitaDetalle() {
       try {
         const a = await obtenerAtencionById(atencionId);
         setAtencion(a);
+
         if (citaIndex !== "new" && a.citas?.[citaIndex]) {
+          const citaExistente = a.citas[citaIndex];
           setCita({
-            ...a.citas[citaIndex],
-            material: a.citas[citaIndex].material || [""],
-            costo_materiales: a.citas[citaIndex].costo_materiales || "",
-            precio_cita: a.citas[citaIndex].precio_cita || "",
+            ...citaExistente,
+            material: citaExistente.material?.map(m => (typeof m === "string" ? m : "")) || [""],
+            costo_materiales: citaExistente.costo_materiales || "",
+            precio_cita: citaExistente.precio_cita || "",
           });
         }
       } catch (error) {
@@ -131,7 +133,8 @@ function CitaDetalle() {
     try {
       const citaLimpia = {
         ...cita,
-        material: cita.material?.map(m => m || "") || [],
+        fecha: cita.fecha || new Date().toISOString().split("T")[0],
+        material: cita.material?.map(m => (typeof m === "string" ? m : "")).filter(m => m),
         costo_materiales: parseFloat(cita.costo_materiales) || 0,
         precio_cita: parseFloat(cita.precio_cita) || 0,
         quien_atiende: cita.quien_atiende || null,
@@ -144,6 +147,7 @@ function CitaDetalle() {
         nuevasCitas[citaIndex] = citaLimpia;
       }
 
+      console.log("Enviando cita:", citaLimpia);
       await updateAtencion(atencion._id, { citas: nuevasCitas });
       toast.success("Cita guardada correctamente");
       navigate(`/atenciones`);

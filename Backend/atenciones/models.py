@@ -14,13 +14,12 @@ class SignosVitales(BaseModel):
 class Cita(BaseModel):
     fecha: Optional[str] = None
     texto: Optional[str] = None
-    material: Optional[str] = None
-    costo_materiales: Optional[str] = None
-    precio_cita: Optional[str] = None
+    material: Optional[List[str]] = []  # ✅ solo strings
+    costo_materiales: Optional[float] = 0.0
+    precio_cita: Optional[float] = 0.0
     signos_vitales: Optional[SignosVitales] = SignosVitales()
     quien_atiende: Optional[str] = None
 
-# Documento principal: Atencion
 class Atencion(BaseModel):
     atencion_id: Optional[str] = None
     paciente_id: str
@@ -28,10 +27,10 @@ class Atencion(BaseModel):
     motivo_consulta: Optional[str] = None
     antecedentes: Optional[List[str]] = []
     notas: Optional[str] = None
-    citas: Optional[List[Cita]] = []   # 👈 Array de citas embebidas
+    citas: Optional[List[Cita]] = []
 
 class AtencionUpdate(BaseModel):
     notas: Optional[str] = None
     antecedentes: Optional[List[str]] = None
     motivo_consulta: Optional[str] = None
-    citas: Optional[List[Cita]] = None   # 👈 también permitir actualizar citas
+    citas: Optional[List[Cita]] = None

@@ -1,94 +1,66 @@
 # librodiario/main.py
-from fastapi import FastAPI, HTTPException, Query, Body
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional
 from librodiario.models import RegistroLibroDiario
 from pymongo import MongoClient
 from bson import ObjectId
-from atenciones.database import atenciones_collection
-from atenciones.main import fisioterapeutas_collection
-from pydantic import BaseModel
-from typing import List
-from datetime import datetime
+from typing import Optional
+import os
 
-# --- MongoDB ---
-client = MongoClient("mongodb://localhost:27017/")
-db = client["clinica_fisio"]
-libro_collection = db["libro_diario"]
-fisioterapeutas_collection = db["fisioterapeutas"]
+app = FastAPI()
 
-# --- FastAPI ---
-app = FastAPI(title="Libro Diario Service")
-
+# CORS para tu frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
-    allow_credentials=True,
     allow_headers=["*"],
 )
 
-# --- Modelo para agregar material ---
-class MaterialUpdate(BaseModel):
-    paciente: str
-    material: str
-    costo_material: float
+# Conexión a MongoDB
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+client = MongoClient(MONGO_URI)
+db = client["clinica_fisio"]
+registros_col = db["libro_diario"]
 
-# --- Registrar un registro en Libro Diario ---
-@app.post("/librodiario/register")
-async def registrar_libro(registro: RegistroLibroDiario):
-    try:
-        registro_dict = {k: v for k, v in registro.dict().items() if v is not None}
-        result = libro_collection.insert_one(registro_dict)
-        return {"message": "Registro agregado", "id": str(result.inserted_id)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# ------------------- CRUD -------------------
 
-# --- Listar registros ---
+@app.post("/librodiario/registrar")
+def registrar_registro(registro: RegistroLibroDiario):
+    doc = registro.dict()  # ✅ ya material es lista de dicts
+    result = registros_col.insert_one(doc)
+    doc["_id"] = str(result.inserted_id)
+    return doc
+
+
 @app.get("/librodiario/listar")
-async def listar_libro(
-    fecha: Optional[str] = Query(None, description="YYYY-MM-DD"),
-    mes: Optional[int] = Query(None, ge=1, le=12, description="Mes en formato numérico"),
-    anio: Optional[int] = Query(None, description="Año en formato YYYY")
+def listar_registros(
+    fecha: Optional[str] = None,
+    mes: Optional[int] = None,
+    anio: Optional[int] = None
 ):
-    filtro = {}
-
-    # Filtrar por fecha exacta
+    query = {}
     if fecha:
-        filtro["fecha"] = fecha
-
-    # Filtrar por mes y año
+        query["fecha"] = fecha
     elif mes and anio:
-        # Rango de inicio y fin del mes
-        inicio = f"{anio}-{str(mes).zfill(2)}-01"
-        if mes == 12:
-            fin = f"{anio+1}-01-01"
-        else:
-            fin = f"{anio}-{str(mes+1).zfill(2)}-01"
+        # Filtro por mes y año: asumimos fecha como "YYYY-MM-DD"
+        query["fecha"] = {"$regex": f"^{anio:04d}-{mes:02d}-"}
 
-        filtro["fecha"] = {"$gte": inicio, "$lt": fin}
+    docs = list(registros_col.find(query))
+    for d in docs:
+        d["_id"] = str(d["_id"])
+    return docs
 
-    resultados = list(libro_collection.find(filtro).sort("_id", -1).limit(1000))
+@app.put("/librodiario/actualizar/{id}")
+def actualizar_registro(id: str, registro: RegistroLibroDiario):
+    result = registros_col.update_one({"_id": ObjectId(id)}, {"$set": registro.dict()})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Registro no encontrado")
+    return {"_id": id, "status": "actualizado"}
 
-    for r in resultados:
-        r["_id"] = str(r["_id"])
-        r["fisioterapeuta_nombre"] = r.get("fisioterapeuta_nombre", "-")
-
-    return resultados
-
-# --- Agregar material a un registro ---
-@app.post("/librodiario/agregar-material")
-async def agregar_material(data: MaterialUpdate):
-    # actualizar en libro diario
-    libro_collection.update_one(
-        {"paciente_id": data.paciente},
-        {"$set": {"material": data.material, "costo_material": data.costo_material}}
-    )
-
-    # actualizar también en cita (colección atenciones)
-    atenciones_collection.update_one(
-        {"paciente_id": data.paciente},
-        {"$set": {"material": data.material, "costo_material": data.costo_material}}
-    )
-
-    return {"msg": "Material agregado correctamente"}
+@app.delete("/librodiario/eliminar/{id}")
+def eliminar_registro(id: str):
+    result = registros_col.delete_one({"_id": ObjectId(id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Registro no encontrado")
+    return {"_id": id, "status": "eliminado"}

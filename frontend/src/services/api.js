@@ -335,3 +335,39 @@ export async function registrarLibroDiario(payload) {
   }
   return await res.json();
 }
+
+
+export async function actualizarRegistro(id, payload) {
+  const res = await fetch(`http://localhost:8006/librodiario/actualizar/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.detail || "Error actualizando registro");
+  }
+
+  return res.json();
+}
+
+
+// api.js
+export async function registrarRegistro(payload) {
+  const res = await fetch("http://localhost:8006/librodiario/registrar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function borrarRegistro(id) {
+  const res = await fetch(`http://localhost:8006/librodiario/borrar/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Error al eliminar registro");
+  return res.json();
+}
