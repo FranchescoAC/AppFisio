@@ -192,56 +192,78 @@ function LibroDiario() {
 
   // --- Guardar o actualizar registro ---
   const handleGuardar = async () => {
-    try {
-      let at, c, fisio;
+  try {
+    let at, c, fisio;
 
-      if (seleccionAtencionId !== "" && seleccionCitaIndex !== null) {
-        at = atenciones.find((a) => a.atencion_id === seleccionAtencionId);
-        c = at?.citas?.[seleccionCitaIndex] ?? {};
-        fisio = fisioterapeutas.find(
-          (f) => String(f._id) === String(c.quien_atiende)
-        );
-      } else {
-        c = {};
-        fisio = fisioterapeutas.find((f) => f.nombre === fisioSeleccionado);
-      }
-
-      const payload = {
-        fecha: fecha || null,
-        paciente_id: pacienteSeleccionado?.paciente_id ?? null,
-        nombres_completos: pacienteSeleccionado?.nombres_completos ?? null,
-        ci: pacienteSeleccionado?.ci ?? null,
-        telefono: pacienteSeleccionado?.telefono ?? null,
-        email: pacienteSeleccionado?.email ?? null,
-        motivo_consulta: at?.motivo_consulta ?? registroSeleccionado?.motivo_consulta ?? null,
-        costo_tratamiento: costoTratamiento ?? 0,
-        material: materialesCita ?? registroSeleccionado?.material ?? [],
-        costo_material: costoMaterial ?? registroSeleccionado?.costo_material ?? 0,
-        efectivo: efectivo === "" ? null : Number(efectivo),
-        transferencia: transferencia === "" ? null : Number(transferencia),
-        bancos: bancos || null,
-        total: (Number(costoTratamiento) || 0) + (Number(costoMaterial) || 0),
-        forma_pago: formaPago ?? null,
-        fisioterapeuta_nombre: fisio?.nombre ?? fisioSeleccionado ?? null,
-      };
-
-      if (registroSeleccionado) {
-        await actualizarRegistro(registroSeleccionado._id, payload);
-      } else {
-        await registrarRegistro(payload);
-      }
-
-      setRegistroSeleccionado(null);
-      setEditandoId(null); // quitar resaltado al guardar
-      await obtenerRegistros();
-      toast.success(
-        registroSeleccionado ? "Registro actualizado correctamente" : "Registro guardado en Libro Diario"
+    if (seleccionAtencionId !== "" && seleccionCitaIndex !== null) {
+      at = atenciones.find((a) => a.atencion_id === seleccionAtencionId);
+      c = at?.citas?.[seleccionCitaIndex] ?? {};
+      fisio = fisioterapeutas.find(
+        (f) => String(f._id) === String(c.quien_atiende)
       );
-    } catch (err) {
-      console.error(err);
-      toast.error("Error guardando registro: " + err.message);
+    } else {
+      c = {};
+      fisio = fisioterapeutas.find((f) => f.nombre === fisioSeleccionado);
     }
-  };
+
+    const payload = {
+      fecha: fecha || null,
+      paciente_id: pacienteSeleccionado?.paciente_id ?? null,
+      nombres_completos: pacienteSeleccionado?.nombres_completos ?? null,
+      ci: pacienteSeleccionado?.ci ?? null,
+      telefono: pacienteSeleccionado?.telefono ?? null,
+      email: pacienteSeleccionado?.email ?? null,
+      motivo_consulta: at?.motivo_consulta ?? registroSeleccionado?.motivo_consulta ?? null,
+      costo_tratamiento: costoTratamiento ?? 0,
+      material: materialesCita ?? registroSeleccionado?.material ?? [],
+      costo_material: costoMaterial ?? registroSeleccionado?.costo_material ?? 0,
+      efectivo: efectivo === "" ? null : Number(efectivo),
+      transferencia: transferencia === "" ? null : Number(transferencia),
+      bancos: bancos || null,
+      total: (Number(costoTratamiento) || 0) + (Number(costoMaterial) || 0),
+      forma_pago: formaPago ?? null,
+      fisioterapeuta_nombre: fisio?.nombre ?? fisioSeleccionado ?? null,
+    };
+
+    if (registroSeleccionado) {
+      await actualizarRegistro(registroSeleccionado._id, payload);
+    } else {
+      await registrarRegistro(payload);
+    }
+
+    // 🧹 Limpiar todos los estados después de guardar
+    setRegistroSeleccionado(null);
+    setEditandoId(null);
+    setPacienteSeleccionado(null);
+    setPacientes([]);
+    setAtenciones([]);
+    setSeleccionAtencionId("");
+    setSeleccionCitaIndex(null);
+    setMaterialesCita([]);
+    setCostoMaterial(null);
+    setCostoTratamiento(null);
+    setEfectivo("");
+    setTransferencia("");
+    setBancos("");
+    setTotal(0);
+    setFormaPago("");
+    setFecha("");
+    setQueryPaciente("");
+
+    // 🔄 Recargar los registros
+    await obtenerRegistros();
+
+    toast.success(
+      registroSeleccionado
+        ? "Registro actualizado correctamente"
+        : "Registro guardado en Libro Diario"
+    );
+  } catch (err) {
+    console.error(err);
+    toast.error("Error guardando registro: " + err.message);
+  }
+};
+
 
   const handleEliminar = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este registro?")) return;
@@ -531,102 +553,81 @@ function LibroDiario() {
       </div>
 
       {/* ==================== TABLA INDEPENDIENTE ==================== */}
-      <div className="tabla-libro-diario" style={{ overflowX: "auto", marginTop: "20px" }}>
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Nombre</th>
-              <th>CI</th>
-              <th>Teléfono</th>
-              <th>Email</th>
-              <th>Motivo</th>
-              <th>Costo Trat.</th>
-              <th>Material</th>
-              <th>Costo Mat.</th>
-              <th>Efectivo</th>
-              <th>Transfer.</th>
-              <th>Bancos</th>
-              <th>Total</th>
-              <th>Forma</th>
-              <th>Fisio</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {registros.map((r) => (
-              <tr key={r._id}>
-                <td>{r.fecha ?? "-"}</td>
-                <td>{r.nombres_completos ?? "-"}</td>
-                <td>{r.ci ?? "-"}</td>
-                <td>{r.telefono ?? "-"}</td>
-                <td>{r.email ?? "-"}</td>
-                <td>{r.motivo_consulta ?? "-"}</td>
-                <td>{r.costo_tratamiento ?? "-"}</td>
-<td>
-  {Array.isArray(r.material) && r.material.length > 0
-    ? r.material.map(m => m.nombre).join(", ")
-    : "-"}
-</td>
+<div className="tabla-libro-diario" style={{ overflowX: "auto", marginTop: "20px" }}>
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Nombre</th>
+        <th>CI</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Motivo</th>
+        <th>Costo Trat.</th>
+        <th>Material</th>
+        <th>Costo Mat.</th>
+        <th>Efectivo</th>
+        <th>Transfer.</th>
+        <th>Bancos</th>
+        <th>Total</th>
+        <th>Forma</th>
+        <th>Fisio</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {registros.map((r) => (
+        <tr key={r._id}>
+          <td>{r.fecha ?? "-"}</td>
+          <td>{r.nombres_completos ?? "-"}</td>
+          <td>{r.ci ?? "-"}</td>
+          <td>{r.telefono ?? "-"}</td>
+          <td>{r.email ?? "-"}</td>
+          <td>{r.motivo_consulta ?? "-"}</td>
+          <td>{r.costo_tratamiento ?? "-"}</td>
+          <td>
+            {Array.isArray(r.material) && r.material.length > 0
+              ? r.material.map((m) => m.nombre).join(", ")
+              : "-"}
+          </td>
+          <td>{r.costo_material ?? "-"}</td>
+          <td>{r.efectivo ?? "-"}</td>
+          <td>{r.transferencia ?? "-"}</td>
+          <td>{r.bancos ?? "-"}</td>
+          <td>{r.total ?? "-"}</td>
+          <td>{r.forma_pago ?? "-"}</td>
+          <td>{r.fisioterapeuta_nombre ?? "-"}</td>
+          <td>
+            <div className="item-actions">
+              <button onClick={() => handleEditarRegistro(r)} className="btn-buscar">
+                ✏️ Editar
+              </button>
+              <button onClick={() => handleEliminar(r._id)} className="delete-btn">
+                🗑️ Eliminar
+              </button>
+            </div>
+          </td>
+        </tr>
+      ))}
+      {registros.length > 0 && (
+        <tr style={{ fontWeight: "bold", backgroundColor: "#f0f0f0" }}>
+          <td colSpan={6}>Totales</td>
+          <td>{totals.costoTrat}</td>
+          <td>-</td>
+          <td>{totals.costoMat}</td>
+          <td>{totals.efectivo}</td>
+          <td>{totals.transf}</td>
+          <td>-</td>
+          <td>{totals.total}</td>
+          <td colSpan={2}>-</td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
 
+<ToastContainer position="top-right" />
 
-                <td>{r.costo_material ?? "-"}</td>
-                <td>{r.efectivo ?? "-"}</td>
-                <td>{r.transferencia ?? "-"}</td>
-                <td>{r.bancos ?? "-"}</td>
-                <td>{r.total ?? "-"}</td>
-                <td>{r.forma_pago ?? "-"}</td>
-                <td>{r.fisioterapeuta_nombre ?? "-"}</td>
-                <td>
-                  <button
-                    onClick={() => handleEditarRegistro(r)}
-                    style={{
-                      backgroundColor: "#36f4ceff",
-                      color: "white",
-                      border: "none",
-                      padding: "6px 12px",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                      marginTop: "10px",
-                    }}
-                  >
-                    ✏️ Editar
-                  </button>
-                  <button
-                    onClick={() => handleEliminar(r._id)}
-                    style={{
-                      backgroundColor: "#f44336",
-                      color: "white",
-                      border: "none",
-                      padding: "4px 5px",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                      marginLeft: 4,
-                    }}
-                  >
-                    🗑️ Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {registros.length > 0 && (
-              <tr style={{ fontWeight: "bold", backgroundColor: "#f0f0f0" }}>
-                <td colSpan={6}>Totales</td>
-                <td>{totals.costoTrat}</td>
-                <td>-</td>
-                <td>{totals.costoMat}</td>
-                <td>{totals.efectivo}</td>
-                <td>{totals.transf}</td>
-                <td>-</td>
-                <td>{totals.total}</td>
-                <td colSpan={2}>-</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <ToastContainer position="top-right" />
     </>
   );
 }

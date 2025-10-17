@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { listarPacientes, buscarPacientes, actualizarPaciente } from "../services/api";
+import { listarPacientes, buscarPacientes, actualizarPaciente, eliminarPaciente } from "../services/api";
 import "../App.css";
 
 function ListadoPacientes() {
@@ -36,6 +36,18 @@ function ListadoPacientes() {
       }
     }
   };
+  const handleEliminar = async (_id) => {
+  if (!window.confirm("¿Seguro que deseas eliminar este paciente?")) return;
+
+  try {
+    await eliminarPaciente(_id);
+    setPacientes((prev) => prev.filter((p) => p._id !== _id));
+    alert("🗑️ Paciente eliminado correctamente");
+  } catch (error) {
+    console.error("Error al eliminar paciente:", error);
+    alert("Error al eliminar paciente: " + error.message);
+  }
+};
 
   // Activar edición inline
   const handleEditar = (paciente) => {
@@ -99,16 +111,20 @@ function ListadoPacientes() {
                   )}
                 </td>
               ))}
-              <td>
-                {editandoId === p._id ? (
-                  <>
-                    <button onClick={handleGuardar} className="btn-guardar">💾Guardar</button>
-                    <button onClick={() => setEditandoId(null)}className="btn-cancelar">❌Cancelar</button>
-                  </>
-                ) : (
-                  <button onClick={() => handleEditar(p)} className="btn-buscar">✏️Editar</button>
-                )}
-              </td>
+              <td className="item-actions">
+  {editandoId === p._id ? (
+    <>
+      <button onClick={handleGuardar} className="btn-guardar">💾Guardar</button>
+      <button onClick={() => setEditandoId(null)} className="btn-cancelar">❌Cancelar</button>
+    </>
+  ) : (
+    <>
+      <button onClick={() => handleEditar(p)} className="btn-buscar">✏️Editar</button>
+      <button onClick={() => handleEliminar(p._id)} className="delete-btn">🗑️Eliminar</button>
+    </>
+  )}
+</td>
+
             </tr>
           ))}
         </tbody>

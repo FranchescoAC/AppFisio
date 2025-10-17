@@ -72,6 +72,25 @@ export async function editarPaciente(paciente_id, data) {
     throw error;
   }
 }
+export async function eliminarPaciente(_id) {
+  try {
+    const response = await fetch(`${API_URL}/pacientes/${_id}`, {
+      method: "DELETE",
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result?.detail || `Error HTTP: ${response.status}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error al eliminar paciente:", error);
+    throw error;
+  }
+}
+
 
 
   export async function registrarAtencion(data) {

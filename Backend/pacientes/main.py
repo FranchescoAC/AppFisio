@@ -75,3 +75,15 @@ def actualizar_paciente(paciente_id: str, datos: Paciente):
     paciente_actualizado = pacientes_collection.find_one({"_id": ObjectId(paciente_id)})
     paciente_actualizado["_id"] = str(paciente_actualizado["_id"])
     return paciente_actualizado
+
+@app.delete("/pacientes/{paciente_id}")
+def eliminar_paciente(paciente_id: str):
+    if not ObjectId.is_valid(paciente_id):
+        raise HTTPException(status_code=400, detail="ID inválido")
+
+    resultado = pacientes_collection.delete_one({"_id": ObjectId(paciente_id)})
+
+    if resultado.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+    return {"message": "Paciente eliminado correctamente"}

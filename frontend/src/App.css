@@ -277,14 +277,16 @@ tbody tr:nth-child(even) {
 
 .item-actions .delete-btn,
 .delete-btn {
-  background: #d9534f;
+  background: #20BFA9; /* Verde corporativo */
   color: white;
   padding: 10px 20px;
+  border: none;
   border-radius: 6px;
-  font-weight: bold;
   cursor: pointer;
-  width: 100%;
-  margin-top: 10px;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-left: 10px;
+  transition: background 0.3s ease;
 }
 
 /* === ANÁLISIS DE VENTAS === */
@@ -632,4 +634,53 @@ tbody tr:nth-child(even) {
 
 .tabla-libro tr:hover {
   background-color: #f1f5ff;
+}
+/* === BOTONES EDITAR Y ELIMINAR === */
+
+/* ----- Botón Editar / Buscar (Verde corporativo) ----- */
+.btn-buscar {
+  display: inline-block;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  color: white;
+  background: #20bfa9; /* Verde */
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.btn-buscar:hover {
+  background: #17a18f;
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(32, 191, 169, 0.4);
+}
+
+/* ----- Botón Eliminar (Rojo corporativo) ----- */
+.delete-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  color: white;
+  background: #f86161 !important; /* Rojo fuerte y prioritario */
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.delete-btn:hover {
+  background: #d94a4a !important;
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(248, 97, 97, 0.4);
+}
+
+/* ----- Contenedor que los separa ----- */
+.item-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px; /* separación uniforme */
 }
